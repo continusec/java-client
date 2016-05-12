@@ -18,8 +18,6 @@ package com.continusec.client;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import java.security.MessageDigest;
-import java.util.Arrays;
-import java.util.Stack;
 
 /**
  * Contains various static utility methods.
@@ -92,66 +90,6 @@ public class Util {
 			}
 		}
 		return rv;
-	}
-
-	/**
-	 * Utility method for auditors that wish to audit the full content of a log, as well as the log operation.
-	 * This method will retrieve all entries in batch from the log, and ensure that the root hash in head can be confirmed to accurately represent the contents
-	 * of all of the log entries. If prev is not NULL, then additionally it is proven that the root hash in head is consistent with the root hash in prev.
-	 * @param prev a previous LogTreeHead representing the set of entries that have been previously audited. This value may be NULL to indicate this log has not previously been audited.
-	 * @param head the LogTreeHead up to which we wish to audit the log. Upon successful completion the caller should persist this for a future iteration.
-	 * @param log the log that should be audited.
-	 * @param auditor caller should implemented a LogAuditor which is called sequentially for each log entry as it is encountered.
-	 * @param factory the factory to use for instantiating log entries. Typically this is one of {@link RawDataEntryFactory#getInstance()}, {@link JsonEntryFactory#getInstance()}, {@link RedactedJsonEntryFactory#getInstance()}.
-	 * @throws ContinusecException upon error
-	 */
-	public static final void auditLogEntries(VerifiableLog log, LogTreeHead prev, LogTreeHead head, LogAuditor auditor, VerifiableEntryFactory factory) throws ContinusecException {
-		if ((prev == null) || prev.getTreeSize() < head.getTreeSize()) {
-			Stack<byte[]> merkleTreeStack = new Stack<byte[]>();
-			if ((prev != null) && (prev.getTreeSize() > 0)) {
-				LogInclusionProof p = log.getInclusionProofByIndex(prev.getTreeSize()+1, prev.getTreeSize());
-				byte[] firstHash = null;
-				for (byte[] b : p.getAuditPath()) {
-					merkleTreeStack.push(b);
-					if (firstHash == null) {
-						firstHash = b;
-					} else {
-						firstHash = Util.nodeMerkleTreeHash(b, firstHash);
-					}
-				}
-				if (!(Arrays.equals(firstHash, prev.getRootHash()))) {
-					throw new VerificationFailedException();
-				}
-			}
-
-			int idx = (prev == null) ? 0 : prev.getTreeSize();
-			for (VerifiableEntry e : log.getEntries(idx, head.getTreeSize(), factory)) {
-				// do whatever content audit is desired on e
-				auditor.auditLogEntry(idx, e);
-
-				// update the merkle tree hash stack:
-				merkleTreeStack.add(e.getLeafHash());
-				for (int z = idx; (z & 1) == 1; z >>= 1) {
-					byte[] right = merkleTreeStack.pop();
-					byte[] left = merkleTreeStack.pop();
-					merkleTreeStack.push(Util.nodeMerkleTreeHash(left, right));
-				}
-				idx++;
-			}
-
-			if (idx != head.getTreeSize()) {
-				throw new VerificationFailedException();
-			}
-
-			byte[] headHash = merkleTreeStack.pop();
-			while (!merkleTreeStack.empty()) {
-				headHash = Util.nodeMerkleTreeHash(merkleTreeStack.pop(), headHash);
-			}
-
-			if (!(Arrays.equals(headHash, head.getRootHash()))) {
-				throw new VerificationFailedException();
-			}
-		}
 	}
 
 	/**

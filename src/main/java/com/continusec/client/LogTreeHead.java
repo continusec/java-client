@@ -29,6 +29,11 @@ import java.io.UnsupportedEncodingException;
  */
 public class LogTreeHead extends TreeHead {
 	/**
+	 * Special value to represent an intentionally empty log.
+	 */
+	public static final LogTreeHead ZeroLogTreeHead = new LogTreeHead(0, null);
+
+	/**
 	 * Constructor.
 	 * @param treeSize the tree size the root hash is valid for.
 	 * @param rootHash the root hash for the log of this tree size.

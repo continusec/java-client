@@ -19,11 +19,11 @@ package com.continusec.client;
 /**
  * Interface for auditors that wish to iterate over entries in a log,
  * to audit both the log operations, and the correctness (or other, as defined by the auditor)
- * of the entries. See {@link Util#auditLogEntries(VerifiableLog, LogTreeHead, LogTreeHead, LogAuditor, VerifiableEntryFactory)}.
+ * of the entries. See {@link VerifiableLog#auditLogEntries(LogTreeHead, LogTreeHead, VerifiableEntryFactory, LogAuditor)}.
  */
 public interface LogAuditor {
 	/**
-	 * Called by {@link Util#auditLogEntries(VerifiableLog, LogTreeHead, LogTreeHead, LogAuditor, VerifiableEntryFactory)} as each log entry is encountered.
+	 * Called by {@link VerifiableLog#auditLogEntries(LogTreeHead, LogTreeHead, VerifiableEntryFactory, LogAuditor)} as each log entry is encountered.
 	 * It is up to the auditor what to do with each entry. The caller is responsible for verifying correct operation of the log, the auditor is responsible
 	 * for any decision about the contents of the entries.
 	 * @param idx the index in the log of this entry.

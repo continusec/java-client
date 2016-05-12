@@ -94,7 +94,7 @@ public class LogEntryIterator implements Iterator<VerifiableEntry> {
 
 				return factory.createFromBytes(rv);
 			} else {
-				throw new RuntimeException(new InternalErrorException());
+				throw new RuntimeException(new NotAllEntriesReturnedException());
 			}
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(new InternalErrorException(e));
