@@ -51,26 +51,4 @@ public abstract class TreeHead {
 		return this.rootHash;
 	}
 
-	/**
-	 * For a given inclusion proof, use this to calculate the root hash
-	 * and compare this against the root hash and tree size that we represent.
-	 * @param proof the inclusion proof to check
-	 * @throws VerificationFailedException if any aspect of verification fails.
-	 */
-	public void verifyInclusion(InclusionProof proof) throws VerificationFailedException {
-		if (this.getTreeSize() != proof.getTreeSize()) {
-			throw new VerificationFailedException();
-		}
-
-		byte[] calcedHash;
-		try {
-			calcedHash = proof.calculateRootHash();
-		} catch (ContinusecException e) {
-			throw new VerificationFailedException(e);
-		}
-
-		if (!(Arrays.equals(calcedHash, this.getRootHash()))) {
-			throw new VerificationFailedException();
-		}
-	}
 }

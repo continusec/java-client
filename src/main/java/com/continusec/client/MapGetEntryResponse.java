@@ -16,11 +16,13 @@
 
 package com.continusec.client;
 
+import java.util.Arrays;
+
 /**
  * Class to represent the response for getting an entry from a map. It contains both the value
  * itself, as well as an inclusion proof for how that value fits into the map root hash.
  */
-public class MapGetEntryResponse implements InclusionProof {
+public class MapGetEntryResponse {
 	private byte[] key;
 	private VerifiableEntry value;
 	private byte[][] auditPath;
@@ -83,5 +85,27 @@ public class MapGetEntryResponse implements InclusionProof {
 			}
 		}
 		return t;
+	}
+
+	/**
+	 * For a given tree head, check to see if our proof can produce it for the same tree size.
+	 * @param head the MapTreeHead to compare
+	 * @throws VerificationFailedException if any aspect of verification fails.
+	 */
+	public void verify(MapTreeHead head) throws VerificationFailedException {
+		if (this.getTreeSize() != head.getMutationLogTreeHead().getTreeSize()) {
+			throw new VerificationFailedException();
+		}
+
+		byte[] calcedHash;
+		try {
+			calcedHash = this.calculateRootHash();
+		} catch (ContinusecException e) {
+			throw new VerificationFailedException(e);
+		}
+
+		if (!(Arrays.equals(calcedHash, head.getRootHash()))) {
+			throw new VerificationFailedException();
+		}
 	}
 }

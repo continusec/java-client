@@ -50,7 +50,7 @@ public class JsonEntry implements VerifiableEntry, UploadableEntry {
 	}
 
 	/**
-	 * Get the data that should be stored.
+	 * Get data for processing.
 	 * @return the raw data
 	 * @throws ContinusecException upon error
 	 */

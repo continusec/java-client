@@ -16,10 +16,12 @@
 
 package com.continusec.client;
 
+import java.util.Arrays;
+
 /**
  * Class to represent proof of inclusion of an entry in a log.
  */
-public class LogInclusionProof implements InclusionProof {
+public class LogInclusionProof {
 	private int treeSize;
 	private byte[] mtlHash;
 	private int leafIdx;
@@ -96,5 +98,27 @@ public class LogInclusionProof implements InclusionProof {
 		}
 
 		return r;
+	}
+
+	/**
+	 * For a given tree head, check to see if our proof can produce it for the same tree size.
+	 * @param head the LogTreeHead to compare
+	 * @throws VerificationFailedException if any aspect of verification fails.
+	 */
+	public void verify(LogTreeHead head) throws VerificationFailedException {
+		if (this.getTreeSize() != head.getTreeSize()) {
+			throw new VerificationFailedException();
+		}
+
+		byte[] calcedHash;
+		try {
+			calcedHash = this.calculateRootHash();
+		} catch (ContinusecException e) {
+			throw new VerificationFailedException(e);
+		}
+
+		if (!(Arrays.equals(calcedHash, head.getRootHash()))) {
+			throw new VerificationFailedException();
+		}
 	}
 }

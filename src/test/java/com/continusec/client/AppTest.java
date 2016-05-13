@@ -28,128 +28,6 @@ import org.apache.commons.codec.binary.Hex;
 import java.util.Stack;
 import java.util.Arrays;
 
-/*
-		// Initialize client
-		ContinusecClient client = new ContinusecClient("7981306761429961588", "c9fc80d4e19ddbf01a4e6b5277a29e1bffa88fe047af9d0b9b36de536f85c2c6");
-
-		// Get pointer to a log object
-		VerifiableLog log = client.verifiableLog("mysecondlog");
-
-		// Create it (only call this once per log!)
-		log.create();
-
-		// Populate entries
-		log.add(new RawDataEntry("foo".getBytes()));
-
-		// JsonEntry wrapper will store the full JSON, but calculate the leaf hash based on the ObjectHash.
-		log.add(new JsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-
-		// RedactibleJsonEntry adds redactible nonces to each value in each object.
-		log.add(new RedactibleJsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-
-		// Typical client operations
-
-		// Fetch a new signed tree head, and prove append-only nature of log
-		LogTreeHash prev = new LogTreeHash(...load from storage...);
-		LogTreeHash head = log.getTreeHash(ContinusecClient.HEAD);
-
-		if (head.getTreeSize() > prev.getTreeSize()) {
-			LogConsistencyProof p = log.getConsistencyProof(prev, head);
-			p.verifyConsistency(prev, head);
-			... write head to storage ...
-		}
-
-		// Prove that an item is in the log (no proof supplied):
-		LogInclusionProof proof = log.getInclusionProof(head, new RawDataEntry("foo".getBytes()));
-		head.verifyInclusion(proof);
-
-		// Prove that an item is in the log (proof is supplied):
-		LogInclusionProof proof = new LogInclusionProof(... supplied proof ...);
-
-		// Get the tree head for size in the proof
-		LogTreeHash inclusionHead = log.getTreeHash(proof.getTreeSize());
-
-		// Ensure this root hash is consistent with the root hash we are tracking
-		if (inclusionHead.getTreeSize() < head.getTreeSize()) { // it's older, verify consistency
-			LogConsistencyProof p = log.getConsistencyProof(inclusionHead, head);
-			p.verifyConsistency(inclusionHead, head);
-		} else if (inclusionHead.getTreeSize() > head.getTreeSize()) { // it's new, verify consistency and store new head
-			LogConsistencyProof p = log.getConsistencyProof(head, inclusionHead);
-			p.verifyConsistency(head, inclusionHead);
-			... write inclusionHead to storage ...
-			head = inclusionHead;
-		} else { // they are equal. use our existing head since we've validated the consistency of the root hash.
-			inclusionHead = head;
-		}
-
-		// Now verify inclusion
-		inclusionHead.verifyInclusion(proof);
-
-		// Auditor operations
-		LogTreeHash prev = new LogTreeHash(...load from storage...);
-		LogTreeHash head = log.getTreeHash(ContinusecClient.HEAD);
-
-		Util.auditLogEntries(log, prev, head, new LogAuditor() {
-			public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
-				// audit actual contents of entry
-			}
-		}, RawDataEntryFactory.getInstance());
-
-		... write head to storage ...
-
-
-
-		// Map operations
-		ContinusecClient client = new ContinusecClient("7981306761429961588", "c9fc80d4e19ddbf01a4e6b5277a29e1bffa88fe047af9d0b9b36de536f85c2c6");
-
-		// Get pointer to a map
-		VerifiableMap map = client.verifiableMap("nextmap");
-
-		// Create map - only do once
-		map.create();
-
-		// Populate
-		map.set("foo".getBytes(), new RawDataEntry("bar".getBytes()));
-		map.set("fiz".getBytes(), new JsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-		map.set("fiz1".getBytes(), new RedactibleJsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-		map.set("fiz2".getBytes(), new RawDataEntry("foz2".getBytes()));
-		map.set("fiz3".getBytes(), new RawDataEntry("foz3".getBytes()));
-		AddEntryResponse rr = map.set("fiz4".getBytes(), new RawDataEntry("foz4".getBytes()));
-
-
-		map.getMutationLog().blockUntilPresent(rr);
-
-		// Get head
-		MapTreeHash head = map.getTreeHash(ContinusecClient.HEAD);
-
-
-
-
-		// Typical client:
-
-
-
-
-
-		VerifiableMap map = client.verifiableMap("mysecondmap");
-
-		// Only call create the first time
-		map.create();
-
-		// Populate
-		map.set("foo".getBytes(), new RawDataEntry("bar".getBytes()));
-		map.set("fiz".getBytes(), new JsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-		map.set("fiz1".getBytes(), new RedactibleJsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-		map.set("fiz2".getBytes(),  new RawDataEntry("foz2".getBytes()));
-		map.set("fiz3".getBytes(),  new RawDataEntry("foz3".getBytes()));
-		map.set("fiz4".getBytes(),  new RawDataEntry("foz4".getBytes()));
-
-
-
-*/
-
-
-
 
 public class AppTest {
 	@Test
@@ -221,10 +99,10 @@ public class AppTest {
 		}
 
 		LogInclusionProof inclProof = log.getInclusionProof(head103, new RawDataEntry(("foo-27").getBytes()));
-		head103.verifyInclusion(inclProof);
+		inclProof.verify(head103);
 
 		try {
-			head.verifyInclusion(inclProof);
+			inclProof.verify(head);
 			throw new RuntimeException();
 		} catch (VerificationFailedException e) {
 			// good
@@ -305,133 +183,36 @@ public class AppTest {
 		if (count[0] != 53) {
 			throw new RuntimeException();
 		}
-		// Initialize client
-	//	ContinusecClient client = new ContinusecClient("7981306761429961588", "c9fc80d4e19ddbf01a4e6b5277a29e1bffa88fe047af9d0b9b36de536f85c2c6");
-/*
-		// Get pointer to a log object
-		VerifiableLog log = client.verifiableLog("my4log");
 
-		// Create it (only call this once per log!)
-		try {
-			log.create();
-		} catch (ObjectConflictException e) {
-			System.out.println("Log already exists, ignoring");
+		JsonEntry je = new JsonEntry("{    \"ssn\":  123.4500 ,   \"name\" :  \"adam\"}".getBytes());
+		inclProof = log.getInclusionProof(head103, je);
+		inclProof.verify(head103);
+
+		VerifiableEntry redEnt = log.get(2, RedactedJsonEntryFactory.getInstance());
+		String dd = new String(redEnt.getData());
+		if (dd.indexOf("snn") >= 0) {
+			throw new RuntimeException();
 		}
-
-		// Populate entries
-		log.add(new RawDataEntry("foo".getBytes()));
-
-		// JsonEntry wrapper will store the full JSON, but calculate the leaf hash based on the ObjectHash.
-		log.add(new JsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-
-		// RedactibleJsonEntry adds redactible nonces to each value in each object.
-		log.blockUntilPresent(log.add(new RedactableJsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes())));
-
-
-		// Typical client operations
-
-		// Fetch a new signed tree head, and prove append-only nature of log
-		LogTreeHash prev = log.getTreeHash(1);
-		LogTreeHash head = log.getTreeHash(ContinusecClient.HEAD);
-
-		if (head.getTreeSize() > prev.getTreeSize()) {
-			LogConsistencyProof p = log.getConsistencyProof(prev, head);
-			p.verifyConsistency(prev, head);
+		if (dd.indexOf("adam") < 0) {
+			throw new RuntimeException();
 		}
+		inclProof = log.getInclusionProof(head103, redEnt);
+		inclProof.verify(head103);
 
-		// Prove that an item is in the log (no proof supplied):
-		LogInclusionProof proof = log.getInclusionProof(head, new RawDataEntry("foo".getBytes()));
-		head.verifyInclusion(proof);
+		client = new ContinusecClient("7981306761429961588", "allseeing", "http://localhost:8080");
+		log = client.verifiableLog("newtestlog");
 
-
-
-		Util.auditLogEntries(log, prev, head, new LogAuditor() {
-			public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
-				System.out.println(idx + " " + e);
-			}
-		}, RawDataEntryFactory.getInstance());
-
-
-
-		// Map operations
-		//ContinusecClient client = new ContinusecClient("7981306761429961588", "c9fc80d4e19ddbf01a4e6b5277a29e1bffa88fe047af9d0b9b36de536f85c2c6");
-
-		// Get pointer to a map
-		VerifiableMap map = client.verifiableMap("mythrismajjp1");
-
-		// Create map - only do once
-		try {
-			map.create();
-		} catch (ObjectConflictException e) {
-			System.out.println("Map already exists, ignoring");
+		redEnt = log.get(2, RedactedJsonEntryFactory.getInstance());
+		dd = new String(redEnt.getData());
+		if (dd.indexOf("snn") >= 0) {
+			throw new RuntimeException();
 		}
+		if (dd.indexOf("adam") < 0) {
+			throw new RuntimeException();
+		}
+		inclProof = log.getInclusionProof(head103, redEnt);
+		inclProof.verify(head103);
 
-		// Populate
-		map.set("foo".getBytes(), new RawDataEntry("bar".getBytes()));
-		map.set("fiz".getBytes(), new JsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-		map.set("fiz1".getBytes(), new RedactableJsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-		map.set("fiz2".getBytes(), new RawDataEntry("foz2".getBytes()));
-		map.set("fiz3".getBytes(), new RawDataEntry("foz3".getBytes()));
-		AddEntryResponse rr = map.set("fiz4".getBytes(), new RawDataEntry("foz4".getBytes()));
-
-		map.getMutationLog().blockUntilPresent(rr);
-
-		// Get head
-		MapTreeHash mapHead = map.getTreeHash(ContinusecClient.HEAD);
-		MapGetEntryResponse rrrr = map.get("foo".getBytes(), mapHead, RawDataEntryFactory.getInstance());
-		mapHead.verifyInclusion(rrrr);
-
-		MapGetEntryResponse rrrrs = map.get("foossss".getBytes(), mapHead, RawDataEntryFactory.getInstance());
-		mapHead.verifyInclusion(rrrrs);
-*/
-
-
-	/*	// Initialize client
-		ContinusecClient client = new ContinusecClient("7981306761429961588", "c9fc80d4e19ddbf01a4e6b5277a29e1bffa88fe047af9d0b9b36de536f85c2c6");
-*/
-	/*	VerifiableMap map = client.verifiableMap("hkhjkh");
-		VerifiableLog treeHeadLog = map.getTreeHeadLog();
-		VerifiableLog mutationLog = map.getMutationLog();
-
-		MapTreeHash mth = map.getTreeHash(0);
-
-		LogTreeHash thh = treeHeadLog.getTreeHash(0);
-		thh.verifyInclusion(treeHeadLog.getInclusionProof(thh, mth));
-		*/
-
-		// Only call create the first time
-		//map.create();
-
-		// Populate
-	/*	map.set("foo".getBytes(), new RawDataEntry("bar".getBytes()));
-		map.set("fiz".getBytes(), new JsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-		map.set("fiz1".getBytes(), new RedactableJsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-		map.set("fiz2".getBytes(), new RawDataEntry("foz2".getBytes()));
-		map.set("fiz3".getBytes(), new RawDataEntry("foz3".getBytes()));*/
-	//	AddEntryResponse rr = map.set("fiz4".getBytes(), new RawDataEntry("foz4".getBytes()));
-
-
-
-		// Get head
-	//	MapTreeHash head = map.blockUntilSize(map.getMutationLog().blockUntilPresent(rr).getTreeSize());
-	//	System.out.println(head.getTreeSize());
-
-
-		// Wait for map to sync, then later:
-
-
-		// And get values and verify their inclusion in head
-		//MapGetEntryResponse<RawDataEntry> entry = map.get("foo".getBytes(), head.getTreeSize());
-		//System.out.println(new String(entry.getValue().getData()));
-	    //Util.verifyMapInclusionProof(entry, head);
-
-		//MapGetEntryResponse<JsonEntry> e1 = map.getJson("fiz".getBytes(), head.getTreeSize());
-		//System.out.println(new String(e1.getValue().getData()));
-	    //Util.verifyMapInclusionProof(e1, head);
-
-		//MapGetEntryResponse<RedactedJsonEntry> e2 = map.getRedactedJson("fiz1".getBytes(), head.getTreeSize());
-		//System.out.println(new String(e2.getValue().getData()));
-	    //Util.verifyMapInclusionProof(e2, head);
 	}
 
 	private static final void runCommonJsonTests(String path) throws Exception {

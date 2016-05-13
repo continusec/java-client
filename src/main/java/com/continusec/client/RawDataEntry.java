@@ -44,7 +44,7 @@ public class RawDataEntry implements VerifiableEntry, UploadableEntry {
 	}
 
 	/**
-	 * Get the data that should be stored.
+	 * Get the data for processing.
 	 * @return the raw data
 	 * @throws ContinusecException upon error
 	 */

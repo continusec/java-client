@@ -188,7 +188,7 @@ public class VerifiableLog {
 	 * @throws ContinusecException upon error
 	 */
 	public VerifiableEntry get(int idx, VerifiableEntryFactory f) throws ContinusecException {
-		return f.createFromBytes(this.client.makeRequest("GET", this.path + "/entry/" + idx, null).data);
+		return f.createFromBytes(this.client.makeRequest("GET", this.path + "/entry/" + idx + f.getFormat(), null).data);
 	}
 
 	/**
@@ -259,7 +259,7 @@ public class VerifiableLog {
 	}
 
 	/**
-	 * Get an consistency proof to show how a log is append-only between two LogTreeHeades.
+	 * Get an consistency proof to show how a log is append-only between two LogTreeHeads.
 	 * @param first the first log tree hash, typically retrieved by {@link #getTreeHead(int)} and persisted.
 	 * @param second the second log tree hash, also retrieved by {@link #getTreeHead(int)} and persisted once verified.
 	 * @return a log consistency proof object that must be verified.
@@ -380,7 +380,7 @@ public class VerifiableLog {
 				}
 			}
 		}
-		headForInclProof.verifyInclusion(proof);
+		proof.verify(headForInclProof);
 		return headForInclProof;
 	}
 
