@@ -148,7 +148,7 @@ import java.util.Arrays;
 
 */
 
- 
+
 
 
 public class AppTest {
@@ -162,7 +162,7 @@ public class AppTest {
 		} catch (ObjectNotFoundException e) {
 			// good
 		}
-		
+
 		client = new ContinusecClient("7981306761429961588", "wrongcred", "http://localhost:8080");
 		log = client.verifiableLog("newtestlog");
 		try {
@@ -171,7 +171,7 @@ public class AppTest {
 		} catch (UnauthorizedAccessException e) {
 			// good
 		}
-		
+
 		client = new ContinusecClient("wrongaccount", "wrongcred", "http://localhost:8080");
 		log = client.verifiableLog("newtestlog");
 		try {
@@ -180,11 +180,11 @@ public class AppTest {
 		} catch (ObjectNotFoundException e) {
 			// good
 		}
-		
+
 		client = new ContinusecClient("7981306761429961588", "c9fc80d4e19ddbf01a4e6b5277a29e1bffa88fe047af9d0b9b36de536f85c2c6", "http://localhost:8080");
 		log = client.verifiableLog("newtestlog");
 		log.create();
-		
+
 		try {
 			log.create();
 			throw new RuntimeException();
@@ -195,19 +195,19 @@ public class AppTest {
 		log.add(new RawDataEntry("foo".getBytes()));
 		log.add(new JsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
 		log.add(new RedactableJsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
-		
+
 		AddEntryResponse aer = log.add(new RawDataEntry("foo".getBytes()));
 		log.blockUntilPresent(aer);
-		
+
 		LogTreeHead head = log.getTreeHead(client.HEAD);
 		if (head.getTreeSize() != 3) {
 			throw new RuntimeException();
 		}
-		
+
 		for (int i = 0; i < 100; i++) {
 			log.add(new RawDataEntry(("foo-"+i).getBytes()));
 		}
-		
+
 		LogTreeHead head103 = log.fetchVerifiedTreeHead(head);
 		if (head103.getTreeSize() != 103) {
 			throw new RuntimeException();
@@ -219,42 +219,42 @@ public class AppTest {
 		} catch (ObjectNotFoundException e) {
 			// good
 		}
-		
+
 		LogInclusionProof inclProof = log.getInclusionProof(head103, new RawDataEntry(("foo-27").getBytes()));
 		head103.verifyInclusion(inclProof);
-		
+
 		try {
 			head.verifyInclusion(inclProof);
 			throw new RuntimeException();
 		} catch (VerificationFailedException e) {
 			// good
 		}
-			
+
 		LogTreeHead head50 = log.getTreeHead(50);
 		if (head50.getTreeSize() != 50) {
 			throw new RuntimeException();
 		}
-		
+
 		LogConsistencyProof cons = log.getConsistencyProof(head50, head103);
 		cons.verifyConsistency(head50, head103);
-		
+
 		try {
 			cons.verifyConsistency(head, head103);
 			throw new RuntimeException();
 		} catch (VerificationFailedException e) {
 			// good
 		}
-		
+
 		inclProof = log.getInclusionProof(10, new RawDataEntry("foo".getBytes()));
-		
+
 		LogTreeHead h10 = log.verifySuppliedInclusionProof(head103, inclProof);
 		if (h10.getTreeSize() != 10) {
 			throw new RuntimeException();
 		}
-		
-		
+
+
 		final int[] count = new int[1];
-		
+
 		count[0] = 0;
 		log.auditLogEntries(LogTreeHead.ZeroLogTreeHead, head103, RawDataEntryFactory.getInstance(), new LogAuditor() {
 			public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
@@ -265,7 +265,7 @@ public class AppTest {
 		if (count[0] != 103) {
 			throw new RuntimeException();
 		}
-		
+
 		LogTreeHead head1 = log.getTreeHead(1);
 		count[0] = 0;
 		try {
@@ -282,7 +282,7 @@ public class AppTest {
 		if (count[0] != 0) {
 			throw new RuntimeException();
 		}
-		
+
 		LogTreeHead head3 = log.getTreeHead(3);
 		count[0] = 0;
 		log.auditLogEntries(head1, head3, JsonEntryFactory.getInstance(), new LogAuditor() {
@@ -294,7 +294,7 @@ public class AppTest {
 		if (count[0] != 2) {
 			throw new RuntimeException();
 		}
-		
+
 		count[0] = 0;
 		log.auditLogEntries(head50, head103, RawDataEntryFactory.getInstance(), new LogAuditor() {
 			public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
@@ -392,9 +392,9 @@ public class AppTest {
 	/*	VerifiableMap map = client.verifiableMap("hkhjkh");
 		VerifiableLog treeHeadLog = map.getTreeHeadLog();
 		VerifiableLog mutationLog = map.getMutationLog();
-		
+
 		MapTreeHash mth = map.getTreeHash(0);
-		
+
 		LogTreeHash thh = treeHeadLog.getTreeHash(0);
 		thh.verifyInclusion(treeHeadLog.getInclusionProof(thh, mth));
 		*/
@@ -410,7 +410,7 @@ public class AppTest {
 		map.set("fiz3".getBytes(), new RawDataEntry("foz3".getBytes()));*/
 	//	AddEntryResponse rr = map.set("fiz4".getBytes(), new RawDataEntry("foz4".getBytes()));
 
-		
+
 
 		// Get head
 	//	MapTreeHash head = map.blockUntilSize(map.getMutationLog().blockUntilPresent(rr).getTreeSize());

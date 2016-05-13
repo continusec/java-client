@@ -224,7 +224,7 @@ public class VerifiableLog {
 
 	/**
 	 * Get an inclusion proof for a given item.
-	 * @param TreeHead the tree hash (ie tree size) for which the inclusion proof should be returned. This is usually as returned by {@link #getTreeHead(int)}.
+	 * @param treeHead the tree hash (ie tree size) for which the inclusion proof should be returned. This is usually as returned by {@link #getTreeHead(int)}.
 	 * @param leaf the entry for which the inclusion proof should be returned. Note that {@link AddEntryResponse} and {@link VerifiableEntry} both implement {@link MerkleTreeLeaf}.
 	 * @return a log inclusion proof object that can be verified against a given tree hash.
 	 * @throws ContinusecException upon error
