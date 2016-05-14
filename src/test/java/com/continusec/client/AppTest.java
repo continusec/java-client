@@ -190,7 +190,7 @@ public class AppTest {
 
 		VerifiableEntry redEnt = log.get(2, RedactedJsonEntryFactory.getInstance());
 		String dd = new String(redEnt.getData());
-		if (dd.indexOf("snn") >= 0) {
+		if (dd.indexOf("ssn") >= 0) {
 			throw new RuntimeException();
 		}
 		if (dd.indexOf("adam") < 0) {
@@ -204,7 +204,7 @@ public class AppTest {
 
 		redEnt = log.get(2, RedactedJsonEntryFactory.getInstance());
 		dd = new String(redEnt.getData());
-		if (dd.indexOf("snn") >= 0) {
+		if (dd.indexOf("123.45") < 0) {
 			throw new RuntimeException();
 		}
 		if (dd.indexOf("adam") < 0) {
@@ -213,6 +213,66 @@ public class AppTest {
 		inclProof = log.getInclusionProof(head103, redEnt);
 		inclProof.verify(head103);
 
+        VerifiableMap map = client.verifiableMap("nnewtestmap");
+        try {
+            map.getTreeHead(client.HEAD);
+			throw new RuntimeException();
+        } catch (ObjectNotFoundException e) {
+            // good
+        }
+
+        map.create();
+        try {
+            map.create();
+			throw new RuntimeException();
+        } catch (ObjectConflictException e) {
+            // good
+        }
+
+		map.set("foo".getBytes(), new RawDataEntry("foo".getBytes()));
+		map.set("fiz".getBytes(), new JsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
+		AddEntryResponse waitResponse = map.set("foz".getBytes(), new RedactableJsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
+
+        for (int i = 0; i < 100; i++) {
+            map.set(("foo"+i).getBytes(), new RawDataEntry(("fooval"+i).getBytes()));
+        }
+
+        map.delete("foo".getBytes());
+        map.delete("foodddd".getBytes());
+        map.delete("foo27".getBytes());
+
+        LogTreeHead mlHead = map.getMutationLog().blockUntilPresent(waitResponse);
+        if (mlHead.getTreeSize() != 106) {
+			throw new RuntimeException();
+        }
+
+        MapTreeHead mrHead = map.blockUntilSize(mlHead.getTreeSize());
+        if (mrHead.getMutationLogTreeHead().getTreeSize() != 106) {
+			throw new RuntimeException();
+        }
+        MapGetEntryResponse entryResp = map.get("foo".getBytes(), mrHead, RawDataEntryFactory.getInstance());
+        entryResp.verify(mrHead);
+
+        dd = new String(entryResp.getValue().getData());
+        if (dd.length() > 0) {
+			throw new RuntimeException();
+        }
+
+        entryResp = map.get("foo-29".getBytes(), mrHead, RawDataEntryFactory.getInstance());
+        entryResp.verify(mrHead);
+
+        dd = new String(entryResp.getValue().getData());
+        if (dd.length() > 0) {
+			throw new RuntimeException();
+        }
+
+        entryResp = map.get("foo29".getBytes(), mrHead, RawDataEntryFactory.getInstance());
+        entryResp.verify(mrHead);
+
+        dd = new String(entryResp.getValue().getData());
+        if (!"fooval29".equals(dd)) {
+			throw new RuntimeException();
+        }
 	}
 
 	private static final void runCommonJsonTests(String path) throws Exception {
