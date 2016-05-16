@@ -38,7 +38,7 @@ public class RedactedJsonEntryFactory implements VerifiableEntryFactory {
 	 * @return the suffix to add.
 	 */
 	public String getFormat() {
-	    return "/xjson";
+		return "/xjson";
 	}
 
 	/**

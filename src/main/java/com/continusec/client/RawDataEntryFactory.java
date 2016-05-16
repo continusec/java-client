@@ -38,7 +38,7 @@ public class RawDataEntryFactory implements VerifiableEntryFactory {
 	 * @return the suffix to add.
 	 */
 	public String getFormat() {
-	    return "";
+		return "";
 	}
 
 	/**

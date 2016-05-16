@@ -88,7 +88,7 @@ public class ContinusecClient {
 	 * @param name name of the map to access.
 	 * @return an object that allows manipulation of the specified map.
 	 */
-	public VerifiableMap verifiableMap(String name) {
+	public VerifiableMap getVerifiableMap(String name) {
 		return new VerifiableMap(this, "/map/" + name);
 	}
 
@@ -98,7 +98,7 @@ public class ContinusecClient {
 	 * @param name name of the log to access.
 	 * @return an object that allows manipulation of the specified log.
 	 */
-	public VerifiableLog verifiableLog(String name) {
+	public VerifiableLog getVerifiableLog(String name) {
 		return new VerifiableLog(this, "/log/" + name);
 	}
 

@@ -35,9 +35,9 @@ import java.io.UnsupportedEncodingException;
  * Once we have a handle to the map, to create it before first use:
  * <pre>{@code
  * try {
- *     map.create();
+ *	 map.create();
  * } catch (ObjectConflictException e) {
- *     // map has already been created
+ *	 // map has already been created
  * }
  * }</pre>
  * <p>
@@ -156,15 +156,17 @@ public class VerifiableMap {
 	}
 
 	/**
-	 * For a given key, return the value and inclusion proof for the given TreeHead.
+	 * For a given key, retrieve the value and inclusion proof, verify the proof, then return the value.
 	 * @param key the key in the map.
-	 * @param TreeHead a tree hash as previously returned by {@link #getTreeHead(int)}
+	 * @param treeHead a tree hash as previously returned by {@link #getVerifiedMapState(int)}
 	 * @param f the factory that should be used to instantiate the VerifiableEntry. Typically one of {@link RawDataEntryFactory#getInstance()}, {@link JsonEntryFactory#getInstance()}, {@link RedactedJsonEntryFactory#getInstance()}.
-	 * @return the value (which may be empty) and inclusion proof.
+	 * @return the VerifiableEntry (which may be empty).
 	 * @throws ContinusecException upon error
 	 */
-	public MapGetEntryResponse get(byte[] key, MapTreeHead TreeHead, VerifiableEntryFactory f) throws ContinusecException {
-		return this.get(key, TreeHead.getTreeSize(), f);
+	public VerifiableEntry getVerifiedValue(byte[] key, MapTreeState treeHead, VerifiableEntryFactory f) throws ContinusecException {
+		MapGetEntryResponse resp = this.get(key, treeHead.getTreeSize(), f);
+		resp.verify(treeHead.getMapTreeHead());
+		return resp.getValue();
 	}
 
 	/**
@@ -235,6 +237,58 @@ public class VerifiableMap {
 		} catch (UnsupportedEncodingException e) {
 			throw new ContinusecException(e);
 		}
+	}
+
+	/**
+	 * VerifiedLatestMapState fetches the latest MapTreeState, verifies it is consistent with,
+	 * and newer than, any previously passed state.
+	 * @param prev previously held MapTreeState, may be null to skip consistency checks.
+	 * @return the map state for the given size
+	 * @throws ContinusecException upon error
+	 */
+	public MapTreeState getVerifiedLatestMapState(MapTreeState prev) throws ContinusecException {
+		MapTreeState head = this.getVerifiedMapState(prev, ContinusecClient.HEAD);
+		if (prev != null) {
+			if (head.getTreeSize() <= prev.getTreeSize()) {
+				return prev;
+			}
+		}
+		return head;
+	}
+
+	/**
+	 * VerifiedMapState returns a wrapper for the MapTreeHead for a given tree size, along with
+	 * a LogTreeHead for the TreeHeadLog that has been verified to contain this map tree head.
+	 * The value returned by this will have been proven to be consistent with any passed prev value.
+	 * Note that the TreeHeadLogTreeHead returned may differ between calls, even for the same treeSize,
+	 * as all future LogTreeHeads can also be proven to contain the MapTreeHead.
+	 *
+	 * Typical clients that only need to access current data will instead use getVerifiedLatestMapState()
+	 * @param prev previously held MapTreeState, may be null to skip consistency checks.
+	 * @param treeSize the tree size to retrieve the hash for. Pass {@link ContinusecClient#HEAD} to get the
+	 * latest tree size.
+	 * @return the map state for the given size
+	 * @throws ContinusecException upon error
+	 */
+	public MapTreeState getVerifiedMapState(MapTreeState prev, int treeSize) throws ContinusecException {
+		if ((treeSize != 0) && (prev != null) && (prev.getTreeSize() == treeSize)) {
+			return prev;
+		}
+
+		MapTreeHead mapHead = this.getTreeHead(treeSize);
+		if (prev != null) {
+			this.getMutationLog().verifyConsistency(prev.getMapTreeHead().getMutationLogTreeHead(), mapHead.getMutationLogTreeHead());
+		}
+
+		LogTreeHead prevThlth = null;
+		if (prev != null) {
+			prevThlth = prev.getTreeHeadLogTreeHead();
+		}
+
+		LogTreeHead thlth = this.getTreeHeadLog().getVerifiedLatestTreeHead(prevThlth);
+		this.getTreeHeadLog().verifyInclusion(thlth, mapHead);
+
+		return new MapTreeState(mapHead, thlth);
 	}
 
 	/**

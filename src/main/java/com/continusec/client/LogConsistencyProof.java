@@ -69,7 +69,7 @@ public class LogConsistencyProof {
 	 * @param second the tree hash for the second tree size
 	 * @throws ContinusecException (most commonly {@link VerificationFailedException}) if the verification fails for any reason.
 	 */
-	public void verifyConsistency(LogTreeHead first, LogTreeHead second) throws ContinusecException {
+	public void verify(LogTreeHead first, LogTreeHead second) throws ContinusecException {
 		if ((first.getTreeSize() != this.firstSize) || (second.getTreeSize() != this.secondSize)) {
 			throw new VerificationFailedException();
 		}

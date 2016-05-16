@@ -33,7 +33,7 @@ public class AppTest {
 	@Test
 	public void testContinusec() throws ContinusecException {
 		ContinusecClient client = new ContinusecClient("7981306761429961588", "c9fc80d4e19ddbf01a4e6b5277a29e1bffa88fe047af9d0b9b36de536f85c2c6", "http://localhost:8080");
-		VerifiableLog log = client.verifiableLog("newtestlog");
+		VerifiableLog log = client.getVerifiableLog("newtestlog");
 		try {
 			log.getTreeHead(client.HEAD);
 			throw new RuntimeException();
@@ -42,7 +42,7 @@ public class AppTest {
 		}
 
 		client = new ContinusecClient("7981306761429961588", "wrongcred", "http://localhost:8080");
-		log = client.verifiableLog("newtestlog");
+		log = client.getVerifiableLog("newtestlog");
 		try {
 			log.getTreeHead(client.HEAD);
 			throw new RuntimeException();
@@ -51,7 +51,7 @@ public class AppTest {
 		}
 
 		client = new ContinusecClient("wrongaccount", "wrongcred", "http://localhost:8080");
-		log = client.verifiableLog("newtestlog");
+		log = client.getVerifiableLog("newtestlog");
 		try {
 			log.getTreeHead(client.HEAD);
 			throw new RuntimeException();
@@ -60,7 +60,7 @@ public class AppTest {
 		}
 
 		client = new ContinusecClient("7981306761429961588", "c9fc80d4e19ddbf01a4e6b5277a29e1bffa88fe047af9d0b9b36de536f85c2c6", "http://localhost:8080");
-		log = client.verifiableLog("newtestlog");
+		log = client.getVerifiableLog("newtestlog");
 		log.create();
 
 		try {
@@ -86,19 +86,19 @@ public class AppTest {
 			log.add(new RawDataEntry(("foo-"+i).getBytes()));
 		}
 
-		LogTreeHead head103 = log.fetchVerifiedTreeHead(head);
+		LogTreeHead head103 = log.getVerifiedLatestTreeHead(head);
 		if (head103.getTreeSize() != 103) {
 			throw new RuntimeException();
 		}
 
 		try {
-			log.getInclusionProof(head103, new RawDataEntry(("foo27").getBytes()));
+			log.verifyInclusion(head103, new RawDataEntry(("foo27").getBytes()));
 			throw new RuntimeException();
 		} catch (ObjectNotFoundException e) {
 			// good
 		}
 
-		LogInclusionProof inclProof = log.getInclusionProof(head103, new RawDataEntry(("foo-27").getBytes()));
+		LogInclusionProof inclProof = log.getInclusionProof(head103.getTreeSize(), new RawDataEntry(("foo-27").getBytes()));
 		inclProof.verify(head103);
 
 		try {
@@ -113,11 +113,11 @@ public class AppTest {
 			throw new RuntimeException();
 		}
 
-		LogConsistencyProof cons = log.getConsistencyProof(head50, head103);
-		cons.verifyConsistency(head50, head103);
+		LogConsistencyProof cons = log.getConsistencyProof(head50.getTreeSize(), head103.getTreeSize());
+		cons.verify(head50, head103);
 
 		try {
-			cons.verifyConsistency(head, head103);
+			cons.verify(head, head103);
 			throw new RuntimeException();
 		} catch (VerificationFailedException e) {
 			// good
@@ -134,7 +134,7 @@ public class AppTest {
 		final int[] count = new int[1];
 
 		count[0] = 0;
-		log.auditLogEntries(LogTreeHead.ZeroLogTreeHead, head103, RawDataEntryFactory.getInstance(), new LogAuditor() {
+		log.verifyEntries(LogTreeHead.ZeroLogTreeHead, head103, RawDataEntryFactory.getInstance(), new LogAuditor() {
 			public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
 				e.getData();
 				count[0]++;
@@ -147,7 +147,7 @@ public class AppTest {
 		LogTreeHead head1 = log.getTreeHead(1);
 		count[0] = 0;
 		try {
-			log.auditLogEntries(head1, head103, JsonEntryFactory.getInstance(), new LogAuditor() {
+			log.verifyEntries(head1, head103, JsonEntryFactory.getInstance(), new LogAuditor() {
 				public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
 					e.getData();
 					count[0]++;
@@ -163,7 +163,7 @@ public class AppTest {
 
 		LogTreeHead head3 = log.getTreeHead(3);
 		count[0] = 0;
-		log.auditLogEntries(head1, head3, JsonEntryFactory.getInstance(), new LogAuditor() {
+		log.verifyEntries(head1, head3, JsonEntryFactory.getInstance(), new LogAuditor() {
 			public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
 				e.getData();
 				count[0]++;
@@ -174,7 +174,7 @@ public class AppTest {
 		}
 
 		count[0] = 0;
-		log.auditLogEntries(head50, head103, RawDataEntryFactory.getInstance(), new LogAuditor() {
+		log.verifyEntries(head50, head103, RawDataEntryFactory.getInstance(), new LogAuditor() {
 			public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
 				e.getData();
 				count[0]++;
@@ -184,9 +184,8 @@ public class AppTest {
 			throw new RuntimeException();
 		}
 
-		JsonEntry je = new JsonEntry("{    \"ssn\":  123.4500 ,   \"name\" :  \"adam\"}".getBytes());
-		inclProof = log.getInclusionProof(head103, je);
-		inclProof.verify(head103);
+		JsonEntry je = new JsonEntry("{	\"ssn\":  123.4500 ,   \"name\" :  \"adam\"}".getBytes());
+		log.verifyInclusion(head103, je);
 
 		VerifiableEntry redEnt = log.get(2, RedactedJsonEntryFactory.getInstance());
 		String dd = new String(redEnt.getData());
@@ -196,11 +195,10 @@ public class AppTest {
 		if (dd.indexOf("adam") < 0) {
 			throw new RuntimeException();
 		}
-		inclProof = log.getInclusionProof(head103, redEnt);
-		inclProof.verify(head103);
+		log.verifyInclusion(head103, redEnt);
 
 		client = new ContinusecClient("7981306761429961588", "allseeing", "http://localhost:8080");
-		log = client.verifiableLog("newtestlog");
+		log = client.getVerifiableLog("newtestlog");
 
 		redEnt = log.get(2, RedactedJsonEntryFactory.getInstance());
 		dd = new String(redEnt.getData());
@@ -210,69 +208,82 @@ public class AppTest {
 		if (dd.indexOf("adam") < 0) {
 			throw new RuntimeException();
 		}
-		inclProof = log.getInclusionProof(head103, redEnt);
-		inclProof.verify(head103);
+		log.verifyInclusion(head103, redEnt);
 
-        VerifiableMap map = client.verifiableMap("nnewtestmap");
-        try {
-            map.getTreeHead(client.HEAD);
+		VerifiableMap map = client.getVerifiableMap("nnewtestmap");
+		try {
+			map.getTreeHead(client.HEAD);
 			throw new RuntimeException();
-        } catch (ObjectNotFoundException e) {
-            // good
-        }
+		} catch (ObjectNotFoundException e) {
+			// good
+		}
 
-        map.create();
-        try {
-            map.create();
+		map.create();
+		try {
+			map.create();
 			throw new RuntimeException();
-        } catch (ObjectConflictException e) {
-            // good
-        }
+		} catch (ObjectConflictException e) {
+			// good
+		}
 
 		map.set("foo".getBytes(), new RawDataEntry("foo".getBytes()));
 		map.set("fiz".getBytes(), new JsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
 		AddEntryResponse waitResponse = map.set("foz".getBytes(), new RedactableJsonEntry("{\"name\":\"adam\",\"ssn\":123.45}".getBytes()));
 
-        for (int i = 0; i < 100; i++) {
-            map.set(("foo"+i).getBytes(), new RawDataEntry(("fooval"+i).getBytes()));
-        }
+		for (int i = 0; i < 100; i++) {
+			map.set(("foo"+i).getBytes(), new RawDataEntry(("fooval"+i).getBytes()));
+		}
 
-        map.delete("foo".getBytes());
-        map.delete("foodddd".getBytes());
-        map.delete("foo27".getBytes());
+		map.delete("foo".getBytes());
+		map.delete("foodddd".getBytes());
+		map.delete("foo27".getBytes());
 
-        LogTreeHead mlHead = map.getMutationLog().blockUntilPresent(waitResponse);
-        if (mlHead.getTreeSize() != 106) {
+		LogTreeHead mlHead = map.getMutationLog().blockUntilPresent(waitResponse);
+		if (mlHead.getTreeSize() != 106) {
 			throw new RuntimeException();
-        }
+		}
 
-        MapTreeHead mrHead = map.blockUntilSize(mlHead.getTreeSize());
-        if (mrHead.getMutationLogTreeHead().getTreeSize() != 106) {
+		MapTreeHead mrHead = map.blockUntilSize(mlHead.getTreeSize());
+		if (mrHead.getMutationLogTreeHead().getTreeSize() != 106) {
 			throw new RuntimeException();
-        }
-        MapGetEntryResponse entryResp = map.get("foo".getBytes(), mrHead, RawDataEntryFactory.getInstance());
-        entryResp.verify(mrHead);
+		}
+		MapGetEntryResponse entryResp = map.get("foo".getBytes(), mrHead.getTreeSize(), RawDataEntryFactory.getInstance());
+		entryResp.verify(mrHead);
 
-        dd = new String(entryResp.getValue().getData());
-        if (dd.length() > 0) {
+		dd = new String(entryResp.getValue().getData());
+		if (dd.length() > 0) {
 			throw new RuntimeException();
-        }
+		}
 
-        entryResp = map.get("foo-29".getBytes(), mrHead, RawDataEntryFactory.getInstance());
-        entryResp.verify(mrHead);
+		entryResp = map.get("foo-29".getBytes(), mrHead.getTreeSize(), RawDataEntryFactory.getInstance());
+		entryResp.verify(mrHead);
 
-        dd = new String(entryResp.getValue().getData());
-        if (dd.length() > 0) {
+		dd = new String(entryResp.getValue().getData());
+		if (dd.length() > 0) {
 			throw new RuntimeException();
-        }
+		}
 
-        entryResp = map.get("foo29".getBytes(), mrHead, RawDataEntryFactory.getInstance());
-        entryResp.verify(mrHead);
+		entryResp = map.get("foo29".getBytes(), mrHead.getTreeSize(), RawDataEntryFactory.getInstance());
+		entryResp.verify(mrHead);
 
-        dd = new String(entryResp.getValue().getData());
-        if (!"fooval29".equals(dd)) {
+		dd = new String(entryResp.getValue().getData());
+		if (!"fooval29".equals(dd)) {
 			throw new RuntimeException();
-        }
+		}
+
+		MapTreeState mapState106 = map.getVerifiedLatestMapState(null);
+		map.getVerifiedMapState(mapState106, 0);
+		MapTreeState mapState2 = map.getVerifiedMapState(mapState106, 2);
+
+		if (mapState2.getTreeSize() != 2) {
+			throw new RuntimeException();
+		}
+
+		VerifiableEntry ve = map.getVerifiedValue("foo".getBytes(), mapState2, RawDataEntryFactory.getInstance());
+		if (!"foo".equals(new String(ve.getData()))) {
+			throw new RuntimeException();
+		}
+
 	}
 
 	private static final void runCommonJsonTests(String path) throws Exception {

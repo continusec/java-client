@@ -42,9 +42,9 @@ import java.util.Arrays;
  * Once we have a handle to the log, to create it before first use:
  * <pre>{@code
  * try {
- *     log.create();
+ *	 log.create();
  * } catch (ObjectConflictException e) {
- *     // log has already been created
+ *	 // log has already been created
  * }
  * }</pre>
  * <p>
@@ -78,7 +78,7 @@ import java.util.Arrays;
  * LogTreeHead head = log.fetchVerifiedTreeHead(prev);
  * // If the new hash is for a bigger tree size:
  * if (head.getTreeSize() > prev.getTreeSize()) {
- *     saveLatestTreeHead(head);
+ *	 saveLatestTreeHead(head);
  * }
  * }</pre>
  * <p>
@@ -100,9 +100,9 @@ import java.util.Arrays;
  *
  * // If inclusion head is newer, save off for the future.
  * if (inclusionHead.getTreeSize() > head.getTreeSize()) {
- *     head = inclusionHead;
- *     saveLatestTreeHead(head);
- *     inclusionHead = head;
+ *	 head = inclusionHead;
+ *	 saveLatestTreeHead(head);
+ *	 inclusionHead = head;
  * }
  * }</pre>
  * <p>
@@ -112,10 +112,10 @@ import java.util.Arrays;
  * LogTreeHead head = log.getTreeHead(ContinusecClient.HEAD);
  *
  * log.auditLogEntries(prev, head, RawDataEntryFactory.getInstance(), new LogAuditor() {
- *     public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
- *         byte[] b = e.getData();
- *         // audit actual contents of entry
- *     }
+ *	 public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
+ *		 byte[] b = e.getData();
+ *		 // audit actual contents of entry
+ *	 }
  * });
  *
  * saveLatestTreeHead(head);
@@ -206,7 +206,7 @@ public class VerifiableLog {
 	}
 
 	/**
-	 * Get an inclusion proof for a given item.
+	 * Get an inclusion proof for a given item for a specific tree size. Most clients will commonly use {@verifyInclusionProof(LogTreeHead,MerkleTreeLeaf)} instead.
 	 * @param treeSize the tree size for which the inclusion proof should be returned. This is usually as returned by {@link #getTreeHead(int)}.getTreeSize().
 	 * @param leaf the entry for which the inclusion proof should be returned. Note that {@link AddEntryResponse} and {@link VerifiableEntry} both implement {@link MerkleTreeLeaf}.
 	 * @return a log inclusion proof object that can be verified against a given tree hash.
@@ -223,19 +223,19 @@ public class VerifiableLog {
 	}
 
 	/**
-	 * Get an inclusion proof for a given item.
-	 * @param treeHead the tree hash (ie tree size) for which the inclusion proof should be returned. This is usually as returned by {@link #getTreeHead(int)}.
+	 * Get an inclusion proof for a given item and verify it.
+	 * @param treeHead the tree head for which the inclusion proof should be returned. This is usually as returned by {@link #getTreeHead(int)}.
 	 * @param leaf the entry for which the inclusion proof should be returned. Note that {@link AddEntryResponse} and {@link VerifiableEntry} both implement {@link MerkleTreeLeaf}.
-	 * @return a log inclusion proof object that can be verified against a given tree hash.
 	 * @throws ContinusecException upon error
 	 */
-	public LogInclusionProof getInclusionProof(LogTreeHead treeHead, MerkleTreeLeaf leaf) throws ContinusecException {
-		return this.getInclusionProof(treeHead.getTreeSize(), leaf);
+	public void verifyInclusion(LogTreeHead treeHead, MerkleTreeLeaf leaf) throws ContinusecException {
+		LogInclusionProof proof = this.getInclusionProof(treeHead.getTreeSize(), leaf);
+		proof.verify(treeHead);
 	}
 
 	/**
 	 * Get an inclusion proof for a specified tree size and leaf index. This is not used by typical clients,
-	 * however it can be useful for audit operations and debugging tools. Typical clients will use {@link #getInclusionProof(LogTreeHead, MerkleTreeLeaf)}.
+	 * however it can be useful for audit operations and debugging tools. Typical clients will use {@verifyInclusionProof(LogTreeHead,MerkleTreeLeaf)}.
 	 * @param treeSize the tree size on which to base the proof.
 	 * @param leafIndex the leaf index for which to retrieve the inclusion proof.
 	 * @return a partially filled in LogInclusionProof (note it will not include the MerkleTreeLeaf hash for the item).
@@ -259,18 +259,42 @@ public class VerifiableLog {
 	}
 
 	/**
-	 * Get an consistency proof to show how a log is append-only between two LogTreeHeads.
-	 * @param first the first log tree hash, typically retrieved by {@link #getTreeHead(int)} and persisted.
-	 * @param second the second log tree hash, also retrieved by {@link #getTreeHead(int)} and persisted once verified.
-	 * @return a log consistency proof object that must be verified.
+	 * verifyConsistency takes two tree heads, retrieves a consistency proof and then verifies it.
+	 * The two tree heads may be in either order (even equal), but both must be greater than zero and non-nil.
+	 * @param a one log tree head
+	 * @param b another log tree head
 	 * @throws ContinusecException upon error
 	 */
-	public LogConsistencyProof getConsistencyProof(LogTreeHead first, LogTreeHead second) throws ContinusecException {
-		return this.getConsistencyProof(first.getTreeSize(), second.getTreeSize());
+	public void verifyConsistency(LogTreeHead a, LogTreeHead b) throws ContinusecException {
+		if ((a.getTreeSize() <= 0) || (b.getTreeSize() <= 0)) {
+			throw new InvalidRangeException();
+		}
+
+		if (a.getTreeSize() == b.getTreeSize()) {
+			if (!Arrays.equals(a.getRootHash(), b.getRootHash())) {
+				throw new VerificationFailedException();
+			}
+
+			return; // special case, both are equal
+		}
+
+		LogTreeHead first;
+		LogTreeHead second;
+		if (a.getTreeSize() < b.getTreeSize()) {
+			first = a;
+			second = b;
+		} else {
+			first = b;
+			second = a;
+		}
+
+		LogConsistencyProof proof = this.getConsistencyProof(first.getTreeSize(), second.getTreeSize());
+		proof.verify(first, second);
 	}
 
 	/**
-	 * Get a consistency proof object by direct index rather than LogTreeHead objects.
+	 * ConsistencyProof returns an audit path which contains the set of Merkle Subtree hashes
+	 * that demonstrate how the root hash is calculated for both the first and second tree sizes.
 	 * @param firstSize the size of the first tree.
 	 * @param secondSize the size of the second tree.
 	 * @return a log consistency proof object that must be verified.
@@ -302,9 +326,8 @@ public class VerifiableLog {
 			if (lth.getTreeSize() > lastHead) {
 				lastHead = lth.getTreeSize();
 				try {
-					if (this.getInclusionProof(lth, leaf) != null) {
-						return lth;
-					}
+					this.verifyInclusion(lth, leaf);
+					return lth;
 				} catch (InvalidRangeException e) {
 					// not present yet, ignore
 				}
@@ -323,32 +346,46 @@ public class VerifiableLog {
 	}
 
 	/**
-	 * FetchVerifiedTreeHead is a utility method to fetch a new LogTreeHead and verifies that it is consistent with
-	 * a tree head earlier fetched and persisted. To avoid potentially masking client tree head storage issues,
-	 * it is an error to pass null. For first use, pass {@link LogTreeHead#ZeroLogTreeHead}, which will bypass consistency proof checking.
-	 * @param prev a previously persisted log tree head, or special value {@link LogTreeHead#ZeroLogTreeHead} on first run.
+	 * getVerifiedLatestTreeHead calls getVerifiedTreeHead() with HEAD to fetch the latest tree head,
+	 * and additionally verifies that it is newer than the previously passed tree head.
+	 * For first use, pass null to skip consistency checking.
+	 * @param prev a previously persisted log tree head
 	 * @return a new tree head, which has been verified to be consistent with the past tree head, or if no newer one present, the same value as passed in.
 	 * @throws ContinusecException upon error
 	 */
-	public LogTreeHead fetchVerifiedTreeHead(LogTreeHead prev) throws ContinusecException {
-		// Fetch latest from server
-		LogTreeHead head = this.getTreeHead(ContinusecClient.HEAD);
-
-		// If the new hash no later than our current one,
-		if (head.getTreeSize() <= prev.getTreeSize()) {
-			// return our current one
-			return prev;
-		} else { // verify consistency with new one
-			// If previous is zero, then skip consistency check
-			if (prev.getTreeSize() != 0) {
-				 // First fetch a consistency proof from the server
-				LogConsistencyProof p = this.getConsistencyProof(prev, head);
-
-				// Verify the consistency proof
-				p.verifyConsistency(prev, head);
+	public LogTreeHead getVerifiedLatestTreeHead(LogTreeHead prev) throws ContinusecException {
+		LogTreeHead head = this.getVerifiedTreeHead(prev, ContinusecClient.HEAD);
+		if (prev != null) {
+			if (head.getTreeSize() <= prev.getTreeSize()) {
+				return prev;
 			}
-			return head;
 		}
+		return head;
+	}
+
+	/**
+	 * VerifiedTreeHead is a utility method to fetch a LogTreeHead and verifies that it is consistent with
+	 * a tree head earlier fetched and persisted. For first use, pass null for prev, which will
+	 * bypass consistency proof checking. Tree size may be older or newer than the previous head value.
+	 * @param prev a previously persisted log tree head
+	 * @param treeSize the tree size to fetch
+	 * @return a new tree head, which has been verified to be consistent with the past tree head, or if no newer one present, the same value as passed in.
+	 * @throws ContinusecException upon error
+	 */
+	public LogTreeHead getVerifiedTreeHead(LogTreeHead prev, int treeSize) throws ContinusecException {
+		// special case returning the value we already have
+		if ((treeSize != 0) && (prev != null) && (prev.getTreeSize() == treeSize)) {
+			return prev;
+		}
+
+		// Fetch latest from server
+		LogTreeHead head = this.getTreeHead(treeSize);
+
+		if (prev != null) {
+			this.verifyConsistency(prev, head);
+		}
+
+		return head;
 	}
 
 	/**
@@ -363,23 +400,7 @@ public class VerifiableLog {
 	 * @throws ContinusecException upon error
 	 */
 	public LogTreeHead verifySuppliedInclusionProof(LogTreeHead prev, LogInclusionProof proof) throws ContinusecException {
-		LogTreeHead headForInclProof = null;
-		if (proof.getTreeSize() == prev.getTreeSize()) {
-			headForInclProof = prev;
-		} else {
-			headForInclProof = this.getTreeHead(proof.getTreeSize());
-			if (prev.getTreeSize() != 0) { // so long as prev is not special value, check consistency
-				if (prev.getTreeSize() < headForInclProof.getTreeSize()) {
-					LogConsistencyProof p = this.getConsistencyProof(prev, headForInclProof);
-					p.verifyConsistency(prev, headForInclProof);
-				} else if (prev.getTreeSize() > headForInclProof.getTreeSize()) {
-					LogConsistencyProof p = this.getConsistencyProof(headForInclProof, prev);
-					p.verifyConsistency(headForInclProof, prev);
-				} else { // should not get here
-					throw new VerificationFailedException();
-				}
-			}
-		}
+		LogTreeHead headForInclProof = this.getVerifiedTreeHead(prev, proof.getTreeSize());
 		proof.verify(headForInclProof);
 		return headForInclProof;
 	}
@@ -394,7 +415,7 @@ public class VerifiableLog {
 	 * @param factory the factory to use for instantiating log entries. Typically this is one of {@link RawDataEntryFactory#getInstance()}, {@link JsonEntryFactory#getInstance()}, {@link RedactedJsonEntryFactory#getInstance()}.
 	 * @throws ContinusecException upon error
 	 */
-	public void auditLogEntries(LogTreeHead prev, LogTreeHead head, VerifiableEntryFactory factory, LogAuditor auditor) throws ContinusecException {
+	public void verifyEntries(LogTreeHead prev, LogTreeHead head, VerifiableEntryFactory factory, LogAuditor auditor) throws ContinusecException {
 		if ((prev == null) || prev.getTreeSize() < head.getTreeSize()) {
 			Stack<byte[]> merkleTreeStack = new Stack<byte[]>();
 			if ((prev != null) && (prev.getTreeSize() > 0)) {
