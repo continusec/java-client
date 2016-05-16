@@ -17,7 +17,7 @@
 package com.continusec.client;
 
 /**
- * Class for MapTreeState as returned by {@link VerifiableMap#getVerifiedMapState(int)}.
+ * Class for MapTreeState as returned by {@link VerifiableMap#getVerifiedMapState(MapTreeState,int)}.
  */
 public class MapTreeState {
 

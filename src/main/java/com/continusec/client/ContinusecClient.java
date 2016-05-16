@@ -29,10 +29,10 @@ import org.apache.commons.io.IOUtils;
  * Main entry point for interacting with Continusec's Verifiable Data Structure APIs.
  * <pre>{@code
  * ContinusecClient client = new ContinusecClient("your account number", "your secret key");
- * VerifiableLog log = client.verifiableLog("testlog");
+ * VerifiableLog log = client.getVerifiableLog("testlog");
  * // use the log ...
  *
- * VerifiableMap map = client.verifiableMap("testmap");
+ * VerifiableMap map = client.getVerifiableMap("testmap");
  * // use the map ...
  *
  * }</pre>

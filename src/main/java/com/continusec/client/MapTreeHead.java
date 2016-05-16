@@ -49,7 +49,7 @@ public class MapTreeHead extends TreeHead implements MerkleTreeLeaf {
 
 	/**
 	 * Implementation of getLeafHash() so that MapTreeHead can be used easily with
-	 * {@link VerifiableLog#getInclusionProof(LogTreeHead, MerkleTreeLeaf)}.
+	 * {@link VerifiableLog#verifyInclusion(LogTreeHead, MerkleTreeLeaf)}.
 	 * @return leaf hash base on the Object Hash for this map root hash with corresponding mutation log.
 	 * @throws ContinusecException upon error
 	 */

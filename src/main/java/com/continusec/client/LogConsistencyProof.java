@@ -19,7 +19,7 @@ package com.continusec.client;
 import java.util.Arrays;
 
 /**
- * Class to represent the result of a call to {@link VerifiableLog#getConsistencyProof(LogTreeHead,LogTreeHead)}.
+ * Class to represent the result of a call to {@link VerifiableLog#getConsistencyProof(int,int)}.
  */
 public class LogConsistencyProof {
 	private int firstSize;

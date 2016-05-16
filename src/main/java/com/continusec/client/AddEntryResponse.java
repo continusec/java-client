@@ -18,7 +18,7 @@ package com.continusec.client;
 
 /**
  * Response from adding entries to a log/map.
- * Can be used in subsequent calls to {@link VerifiableLog#getInclusionProof(LogTreeHead, MerkleTreeLeaf)}.
+ * Can be used in subsequent calls to {@link VerifiableLog#verifyInclusion(LogTreeHead, MerkleTreeLeaf)}.
  */
 public class AddEntryResponse implements MerkleTreeLeaf {
 	/**

@@ -26,10 +26,10 @@ import org.apache.commons.codec.DecoderException;
 import java.io.UnsupportedEncodingException;
 
 /**
- * Class to manage interactions with a Verifiable Map. Use {@link ContinusecClient#verifiableMap(String)} to instantiate:
+ * Class to manage interactions with a Verifiable Map. Use {@link ContinusecClient#getVerifiableMap(String)} to instantiate:
  * <pre>{@code
  * ContinusecClient client = new ContinusecClient("your account number", "your secret key");
- * VerifiableMap map = client.verifiableMap("testmap");
+ * VerifiableMap map = client.getVerifiableMap("testmap");
  * }</pre>
  * <p>
  * Once we have a handle to the map, to create it before first use:
@@ -60,25 +60,18 @@ import java.io.UnsupportedEncodingException;
  * MapTreeHead mth = map.blockUntilSize(lth.getTreeSize());
  * }</pre>
  * <p>
- * To get the latest MapTreeHead from a map, and prove its inclusion in the TreeHead log:
+ * To get the latest MapTreeState from a map, verify the consistency of the underlying mutation log, and inclusion in the tree head log:
  * <pre>{@code
- * // First, fetch the latest tree hash for the map
- * MapTreeHead mth = map.getTreeHead(ContinusecClient.HEAD);
- *
- * // Now, verify that this is included in the TreeHead log before using:
- * VerifiableLog treeHeadLog = map.getTreeHeadLog();
- * LogTreeHead thh = treeHeadLog.getTreeHead(ContinusecClient.HEAD);
- * thh.verifyInclusion(treeHeadLog.getInclusionProof(thh, mth));
- *
- * // TODO, use same code as in {@link VerifiableLog} documentation to:
- * // (1) Verify the mutation log is consistent
- * // (2) Verify the tree head log is consistent
+ * MapTreeState prev = loadPrevState();
+ * MapTreeState head = map.getVerifiedLatestMapState(prev);
+ * if (head.getTreeSize() > prev.getTreeSize()) {
+ *     savePrevState(head);
+ * }
  * }</pre>
  * <p>
  * To get a value from the log, and prove its inclusion in the map root hash:
  * <pre>{@code
- * MapGetEntryResponse entry = map.get("foo".getBytes(), mth, RawDataEntryFactory.getInstance());
- * mth.verifyInclusion(entry);
+ * VerifiableEntry entry = map.get("foo".getBytes(), head, RawDataEntryFactory.getInstance());
  * }</pre>
  */
 public class VerifiableMap {
@@ -86,7 +79,7 @@ public class VerifiableMap {
 	private String path;
 
 	/**
-	 * Package private constructor. Use {@link ContinusecClient#verifiableMap(String)} to instantiate.
+	 * Package private constructor. Use {@link ContinusecClient#getVerifiableMap(String)} to instantiate.
 	 * @param client the client (used for requests) that this map belongs to
 	 * @param path the relative path to the map.
 	 */
@@ -158,7 +151,7 @@ public class VerifiableMap {
 	/**
 	 * For a given key, retrieve the value and inclusion proof, verify the proof, then return the value.
 	 * @param key the key in the map.
-	 * @param treeHead a tree hash as previously returned by {@link #getVerifiedMapState(int)}
+	 * @param treeHead a map tree state as previously returned by {@link #getVerifiedMapState(MapTreeState,int)}
 	 * @param f the factory that should be used to instantiate the VerifiableEntry. Typically one of {@link RawDataEntryFactory#getInstance()}, {@link JsonEntryFactory#getInstance()}, {@link RedactedJsonEntryFactory#getInstance()}.
 	 * @return the VerifiableEntry (which may be empty).
 	 * @throws ContinusecException upon error

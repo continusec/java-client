@@ -33,10 +33,10 @@ import java.util.Stack;
 import java.util.Arrays;
 
 /**
- * Class to interact with verifiable logs. Instantiate by callling {@link ContinusecClient#verifiableLog(String)} method:
+ * Class to interact with verifiable logs. Instantiate by callling {@link ContinusecClient#getVerifiableLog(String)} method:
  * <pre>{@code
  * ContinusecClient client = new ContinusecClient("your account number", "your secret key");
- * VerifiableLog log = client.verifiableLog("testlog");
+ * VerifiableLog log = client.getVerifiableLog("testlog");
  * }</pre>
  * <p>
  * Once we have a handle to the log, to create it before first use:
@@ -51,7 +51,7 @@ import java.util.Arrays;
  * To add different types of entries to an existing log:
  * <pre>{@code
  * ContinusecClient client = new ContinusecClient("your account number", "your secret key");
- * VerifiableLog log = client.verifiableLog("testlog");
+ * VerifiableLog log = client.getVerifiableLog("testlog");
  *
  * // Add raw data entry
  * log.add(new RawDataEntry("foo".getBytes()));
@@ -71,12 +71,8 @@ import java.util.Arrays;
  * <p>
  * To get a fresh tree hash from the log, and compare it against a previously seen tree hash for consistency:
  * <pre>{@code
- * // Load previous tree hash (your own code!)
- * LogTreeHead prev = loadPreviousTreeHead(); // log.getTreeHead(1) can be useful for testing
- *
- * // Fetch latest from server, fetchVerifiedTreeHead will verify consistency for us
- * LogTreeHead head = log.fetchVerifiedTreeHead(prev);
- * // If the new hash is for a bigger tree size:
+ * LogTreeHead prev = loadPreviousTreeHead();
+ * LogTreeHead head = log.getVerifiedLatestTreeHead(prev);
  * if (head.getTreeSize() > prev.getTreeSize()) {
  *	 saveLatestTreeHead(head);
  * }
@@ -84,10 +80,7 @@ import java.util.Arrays;
  * <p>
  * To prove that some data is present in the log, where no proof is supplied with the data (assumes {@code head} was fetched earlier):
  * <pre>{@code
- * // Fetch an inclusion proof from the log (we pass head so that the log knows the right tree size to return it for
- * LogInclusionProof proof = log.getInclusionProof(head, new RawDataEntry("foo".getBytes()));
- * // Now we verify the proof received against the tree head root hash we already have
- * head.verifyInclusion(proof);
+ * log.verifyInclusion(head, new RawDataEntry("foo".getBytes()));
  * }</pre>
  * <p>
  * To prove that some data is present in the log, where the proof has already been supplied with the data (assumes {@code head} was fetched earlier):
@@ -97,28 +90,27 @@ import java.util.Arrays;
  *
  * // Fetch applicable tree head, verify consistency with our supplied tree head, then verify inclusion of proof
  * LogTreeHead inclusionHead = log.verifySuppliedInclusionProof(head, proof);
- *
- * // If inclusion head is newer, save off for the future.
+ * // Anytime we get a new tree head, make sure we save it off.
  * if (inclusionHead.getTreeSize() > head.getTreeSize()) {
- *	 head = inclusionHead;
  *	 saveLatestTreeHead(head);
- *	 inclusionHead = head;
  * }
  * }</pre>
  * <p>
- * For auditors that wish to audit both the contents as well as the correct operation of the log (see {@link #auditLogEntries(LogTreeHead,LogTreeHead,VerifiableEntryFactory,LogAuditor)} for more details):
+ * For auditors that wish to audit both the contents as well as the correct operation of the log (see {@link #verifyEntries(LogTreeHead,LogTreeHead,VerifiableEntryFactory,LogAuditor)} for more details):
  * <pre>{@code
  * LogTreeHead prev = loadPreviousTreeHead(); // null is correct for first run
- * LogTreeHead head = log.getTreeHead(ContinusecClient.HEAD);
+ * LogTreeHead head = log.getVerifiedLatestTreeHead(prev);
  *
- * log.auditLogEntries(prev, head, RawDataEntryFactory.getInstance(), new LogAuditor() {
+ * log.verifyEntries(prev, head, RawDataEntryFactory.getInstance(), new LogAuditor() {
  *	 public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
  *		 byte[] b = e.getData();
  *		 // audit actual contents of entry
  *	 }
  * });
  *
- * saveLatestTreeHead(head);
+ * if (head.getTreeSize() > prev.getTreeSize()) {
+ *	 saveLatestTreeHead(head);
+ * }
  * }</pre>
  */
 public class VerifiableLog {
@@ -126,7 +118,7 @@ public class VerifiableLog {
 	private String path;
 
 	/**
-	 * Package private constructor. Use  {@link ContinusecClient#verifiableLog(String)} to instantiate.
+	 * Package private constructor. Use  {@link ContinusecClient#getVerifiableLog(String)} to instantiate.
 	 * @param client the client (used for requests) that this log belongs to
 	 * @param path the relative path to the log.
 	 */
@@ -206,7 +198,7 @@ public class VerifiableLog {
 	}
 
 	/**
-	 * Get an inclusion proof for a given item for a specific tree size. Most clients will commonly use {@verifyInclusionProof(LogTreeHead,MerkleTreeLeaf)} instead.
+	 * Get an inclusion proof for a given item for a specific tree size. Most clients will commonly use {@link #verifyInclusion(LogTreeHead,MerkleTreeLeaf)} instead.
 	 * @param treeSize the tree size for which the inclusion proof should be returned. This is usually as returned by {@link #getTreeHead(int)}.getTreeSize().
 	 * @param leaf the entry for which the inclusion proof should be returned. Note that {@link AddEntryResponse} and {@link VerifiableEntry} both implement {@link MerkleTreeLeaf}.
 	 * @return a log inclusion proof object that can be verified against a given tree hash.
@@ -235,7 +227,7 @@ public class VerifiableLog {
 
 	/**
 	 * Get an inclusion proof for a specified tree size and leaf index. This is not used by typical clients,
-	 * however it can be useful for audit operations and debugging tools. Typical clients will use {@verifyInclusionProof(LogTreeHead,MerkleTreeLeaf)}.
+	 * however it can be useful for audit operations and debugging tools. Typical clients will use {@link #verifyInclusion(LogTreeHead,MerkleTreeLeaf)}.
 	 * @param treeSize the tree size on which to base the proof.
 	 * @param leafIndex the leaf index for which to retrieve the inclusion proof.
 	 * @return a partially filled in LogInclusionProof (note it will not include the MerkleTreeLeaf hash for the item).
@@ -311,9 +303,9 @@ public class VerifiableLog {
 
 	/**
 	 * Block until the log is able to produce a LogTreeHead that includes the specified MerkleTreeLeaf.
-	 * This polls {@link #getTreeHead(int)} and {@link #getInclusionProof(LogTreeHead, MerkleTreeLeaf)} until
+	 * This polls {@link #getTreeHead(int)} and {@link #verifyInclusion(LogTreeHead, MerkleTreeLeaf)} until
 	 * such time as a new tree hash is produced that includes the given MerkleTreeLeaf. Exponential back-off
-	 * is used when no tree hash is available. This is intended for test use.
+	 * is used when no tree hash is available. This is intended for test use - the returned tree head is not verified for consistency.
 	 * @param leaf the leaf we should block until included. Typically this is a {@link AddEntryResponse} as returned by {@link #add(UploadableEntry)}.
 	 * @return the first tree hash that includes this leaf (proof is not verified).
 	 * @throws ContinusecException upon error
