@@ -71,7 +71,7 @@ public class LogInclusionProof {
 	 * @return the calculated root hash. Callers should compare this against the root hash returned by {@link VerifiableLog#getTreeHead(int)}.
 	 * @throws ContinusecException upon error
 	 */
-	public byte[] calculateRootHash() throws ContinusecException {
+	private byte[] calculateRootHash() throws ContinusecException {
 		if ((this.leafIdx >= this.treeSize) || (this.leafIdx < 0)) {
 			throw new InvalidRangeException();
 		}

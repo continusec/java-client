@@ -50,7 +50,6 @@ public class MapTreeState {
 		return this.mapTreeHead;
 	}
 
-
 	/**
 	 * Utility method for returning the size of the map that this state represents.
 	 * @return the size

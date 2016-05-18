@@ -43,12 +43,21 @@ public class MapGetEntryResponse {
 	}
 
 	/**
+	 * The key in this map entry response.
+	 * @return the key
+	 */
+	public byte[] getKey() {
+		return this.key;
+	}
+
+	/**
 	 * The value in this map entry response.
 	 * @return the value
 	 */
 	public VerifiableEntry getValue() {
 		return this.value;
 	}
+
 	/**
 	 * The tree size that this map entry response is valid for.
 	 * @return the tree size
@@ -70,7 +79,7 @@ public class MapGetEntryResponse {
 	 * @return the calculated root hash. Callers should compare this against the root hash returned by {@link VerifiableMap#getTreeHead(int)}.
 	 * @throws ContinusecException upon error
 	 */
-	public byte[] calculateRootHash() throws ContinusecException {
+	private byte[] calculateRootHash() throws ContinusecException {
 		boolean[] kp = Util.constructMapKeyPath(this.key);
 		byte[] t = this.value.getLeafHash();
 		for (int i = kp.length - 1; i >= 0; i--) {
