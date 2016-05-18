@@ -58,6 +58,4 @@ public class MapTreeState {
 	public int getTreeSize() {
 		return this.mapTreeHead.getTreeSize();
 	}
-
-
 }

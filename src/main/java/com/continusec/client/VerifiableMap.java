@@ -71,7 +71,7 @@ import java.io.UnsupportedEncodingException;
  * <p>
  * To get a value from the log, and prove its inclusion in the map root hash:
  * <pre>{@code
- * VerifiableEntry entry = map.get("foo".getBytes(), head, RawDataEntryFactory.getInstance());
+ * VerifiableEntry entry = map.getVerifiedValue("foo".getBytes(), head, RawDataEntryFactory.getInstance());
  * }</pre>
  */
 public class VerifiableMap {
@@ -189,7 +189,7 @@ public class VerifiableMap {
 	 */
 	public AddEntryResponse set(byte[] key, UploadableEntry e) throws ContinusecException {
 		try {
-			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("PUT", this.path + "/key/h/" + Hex.encodeHexString(key) + e.getFormatSuffix(), e.getDataForUpload()).data, "UTF-8")).getAsJsonObject();
+			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("PUT", this.path + "/key/h/" + Hex.encodeHexString(key) + e.getFormat(), e.getDataForUpload()).data, "UTF-8")).getAsJsonObject();
 			return new AddEntryResponse(Base64.decodeBase64(j.get("leaf_hash").getAsString()));
 		} catch (UnsupportedEncodingException e1) {
 			throw new ContinusecException(e1);

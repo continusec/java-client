@@ -28,9 +28,9 @@ import org.apache.commons.codec.binary.Hex;
 import java.util.Stack;
 import java.util.Arrays;
 
-
+// Tests disabled by default due to dependencies on golang mock API server being available
 public class AppTest {
-	@Test
+	//@Test
 	public void testContinusec() throws ContinusecException {
 		ContinusecClient client = new ContinusecClient("7981306761429961588", "c9fc80d4e19ddbf01a4e6b5277a29e1bffa88fe047af9d0b9b36de536f85c2c6", "http://localhost:8080");
 		VerifiableLog log = client.getVerifiableLog("newtestlog");
@@ -134,7 +134,7 @@ public class AppTest {
 		final int[] count = new int[1];
 
 		count[0] = 0;
-		log.verifyEntries(LogTreeHead.ZeroLogTreeHead, head103, RawDataEntryFactory.getInstance(), new LogAuditor() {
+		log.verifyEntries(null, head103, RawDataEntryFactory.getInstance(), new LogAuditor() {
 			public void auditLogEntry(int idx, VerifiableEntry e) throws ContinusecException {
 				e.getData();
 				count[0]++;
@@ -310,8 +310,8 @@ public class AppTest {
 		}
 	}
 
-	@Test
+	//@Test
 	public void testObjectHash() throws Exception {
-		//runCommonJsonTests("../../objecthash/common_json.test");
+		runCommonJsonTests("../objecthash/common_json.test");
 	}
 }

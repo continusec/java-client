@@ -77,10 +77,10 @@ public class JsonEntry implements VerifiableEntry, UploadableEntry {
 	}
 
 	/**
-	 * Returns the format suffix needed for the internal POST to /entry.
+	 * Returns the format needed for the internal POST to /entry.
 	 * @return format suffix
 	 */
-	public String getFormatSuffix() {
+	public String getFormat() {
 		return "/xjson";
 	}
 

@@ -27,11 +27,10 @@ import java.io.UnsupportedEncodingException;
 /**
  * Class for Tree Hash as returned for a log with a given size.
  */
-public class LogTreeHead extends TreeHead {
-	/**
-	 * Special value to represent an intentionally empty log.
-	 */
-	public static final LogTreeHead ZeroLogTreeHead = new LogTreeHead(0, null);
+public class LogTreeHead {
+
+	private int treeSize;
+	private byte[] rootHash;
 
 	/**
 	 * Constructor.
@@ -39,7 +38,24 @@ public class LogTreeHead extends TreeHead {
 	 * @param rootHash the root hash for the log of this tree size.
 	 */
 	public LogTreeHead(int treeSize, byte[] rootHash) {
-		super(treeSize, rootHash);
+		this.treeSize = treeSize;
+		this.rootHash = rootHash;
+	}
+
+	/**
+	 * Returns the tree size for this tree hash.
+	 * @return the tree size for this tree hash.
+	 */
+	public int getTreeSize() {
+		return this.treeSize;
+	}
+
+	/**
+	 * Returns the root hash for this tree size.
+	 * @return the root hash for this tree size.
+	 */
+	public byte[] getRootHash() {
+		return this.rootHash;
 	}
 
 	/**

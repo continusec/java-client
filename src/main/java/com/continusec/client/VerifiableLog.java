@@ -147,7 +147,7 @@ public class VerifiableLog {
 	 */
 	public AddEntryResponse add(UploadableEntry e) throws ContinusecException {
 		try {
-			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("POST", this.path + "/entry" + e.getFormatSuffix(), e.getDataForUpload()).data, "UTF-8")).getAsJsonObject();
+			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("POST", this.path + "/entry" + e.getFormat(), e.getDataForUpload()).data, "UTF-8")).getAsJsonObject();
 			return new AddEntryResponse(Base64.decodeBase64(j.get("leaf_hash").getAsString()));
 		} catch (UnsupportedEncodingException e1) {
 			throw new ContinusecException(e1);
@@ -383,10 +383,9 @@ public class VerifiableLog {
 	/**
 	 * VerifySuppliedInclusionProof is a utility method that fetches any required tree heads that are needed
 	 * to verify a supplied log inclusion proof. Additionally it will ensure that any fetched tree heads are consistent
-	 * with any prior supplied LogTreeHead.  To avoid potentially masking client tree head storage issues,
-	 * it is an error to pass null. For first use, pass {@link LogTreeHead#ZeroLogTreeHead}, which will
+	 * with any prior supplied LogTreeHead. For first use, pass null for prev, which will
 	 * bypass consistency proof checking.
-	 * @param prev a previously persisted log tree head, or special value {@link LogTreeHead#ZeroLogTreeHead}
+	 * @param prev a previously persisted log tree head, or null
 	 * @param proof an inclusion proof that may be for a different tree size than prev.getTreeSize()
 	 * @return the verified (for consistency) LogTreeHead that was used for successful verification (of inclusion) of the supplied proof. This may be older than the LogTreeHead passed in.
 	 * @throws ContinusecException upon error
@@ -400,8 +399,8 @@ public class VerifiableLog {
 	/**
 	 * Utility method for auditors that wish to audit the full content of a log, as well as the log operation.
 	 * This method will retrieve all entries in batch from the log, and ensure that the root hash in head can be confirmed to accurately represent the contents
-	 * of all of the log entries. If prev is not NULL, then additionally it is proven that the root hash in head is consistent with the root hash in prev.
-	 * @param prev a previous LogTreeHead representing the set of entries that have been previously audited. To avoid potentially masking client tree head storage issues, it is an error to pass NULL. To indicate this is has not previously been audited, pass {@link LogTreeHead#ZeroLogTreeHead},
+	 * of all of the log entries. If prev is not null, then additionally it is proven that the root hash in head is consistent with the root hash in prev.
+	 * @param prev a previous LogTreeHead representing the set of entries that have been previously audited. To indicate this is has not previously been audited, pass null,
 	 * @param head the LogTreeHead up to which we wish to audit the log. Upon successful completion the caller should persist this for a future iteration.
 	 * @param auditor caller should implemented a LogAuditor which is called sequentially for each log entry as it is encountered.
 	 * @param factory the factory to use for instantiating log entries. Typically this is one of {@link RawDataEntryFactory#getInstance()}, {@link JsonEntryFactory#getInstance()}, {@link RedactedJsonEntryFactory#getInstance()}.

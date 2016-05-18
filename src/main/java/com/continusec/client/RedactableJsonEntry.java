@@ -42,7 +42,7 @@ public class RedactableJsonEntry implements UploadableEntry {
 	 * Get the suffix that should be added to the PUT/POST request for this data format.
 	 * @return the suffix
 	 */
-	public String getFormatSuffix() {
+	public String getFormat() {
 		return "/xjson/redactable";
 	}
 

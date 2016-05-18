@@ -31,5 +31,5 @@ public interface UploadableEntry {
 	 * Get the format suffix that should be appended to the PUT/POST request.
 	 * @return the format suffix.
 	 */
-	public String getFormatSuffix();
+	public String getFormat();
 }

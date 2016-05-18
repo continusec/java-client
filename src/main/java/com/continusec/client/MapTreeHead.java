@@ -19,24 +19,24 @@ package com.continusec.client;
 import com.google.gson.JsonObject;
 import org.apache.commons.codec.binary.Base64;
 
-
-
 /**
  * Class for Tree Hash as returned for a map with a given size.
  */
-public class MapTreeHead extends TreeHead implements MerkleTreeLeaf {
+public class MapTreeHead implements MerkleTreeLeaf {
 
-	private LogTreeHead mutationLogHash;
+	private LogTreeHead mutationLogHead;
 	private byte[] oh = null;
+	private byte[] rootHash;
+
 
 	/**
 	 * Constructor.
 	 * @param rootHash the root hash for the map of this tree size.
-	 * @param mutationLogHash the corresponding tree hash for the mutation log
+	 * @param mutationLogHead the corresponding tree hash for the mutation log
 	 */
-	public MapTreeHead(byte[] rootHash, LogTreeHead mutationLogHash) {
-		super(mutationLogHash.getTreeSize(), rootHash);
-		this.mutationLogHash = mutationLogHash;
+	public MapTreeHead(byte[] rootHash, LogTreeHead mutationLogHead) {
+		this.rootHash = rootHash;
+		this.mutationLogHead = mutationLogHead;
 	}
 
 	/**
@@ -44,7 +44,23 @@ public class MapTreeHead extends TreeHead implements MerkleTreeLeaf {
 	 * @return the mutation log tree hash.
 	 */
 	public LogTreeHead getMutationLogTreeHead() {
-		return this.mutationLogHash;
+		return this.mutationLogHead;
+	}
+
+	/**
+	 * Returns the map size for this root hash.
+	 * @return the map size for this root hash.
+	 */
+	public int getTreeSize() {
+		return this.mutationLogHead.getTreeSize();
+	}
+
+	/**
+	 * Returns the map root hash for this map size.
+	 * @return the map root hash for this map size.
+	 */
+	public byte[] getRootHash() {
+		return this.rootHash;
 	}
 
 	/**
