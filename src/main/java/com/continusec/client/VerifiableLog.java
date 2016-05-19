@@ -356,7 +356,7 @@ public class VerifiableLog {
 	}
 
 	/**
-	 * VerifiedTreeHead is a utility method to fetch a LogTreeHead and verifies that it is consistent with
+	 * getVerifiedTreeHead is a utility method to fetch a LogTreeHead and verifies that it is consistent with
 	 * a tree head earlier fetched and persisted. For first use, pass null for prev, which will
 	 * bypass consistency proof checking. Tree size may be older or newer than the previous head value.
 	 * @param prev a previously persisted log tree head

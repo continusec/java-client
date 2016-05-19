@@ -33,7 +33,7 @@ public class RedactedJsonEntry implements VerifiableEntry {
 
 	/**
 	 * Package private constructor. Unlike the other Entry types, this is made package
-	 * private deliberately to prevent accidentaly confusion with {@link RedactableJsonEntry}
+	 * private deliberately to prevent accidental confusion with {@link RedactableJsonEntry}
 	 * which is what should be used to create an entry for upload.
 	 * @param rawData the raw data respresenting the redacted JSON.
 	 */

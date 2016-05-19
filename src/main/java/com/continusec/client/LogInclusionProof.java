@@ -33,7 +33,7 @@ public class LogInclusionProof {
 	 * @param treeSize the tree size for which this proof is valid.
 	 * @param mtlHash the Merkle Tree Leaf hash of the entry this proof is valid for.
 	 * @param leafIdx the index of this entry in the log.
-	 * @param auditPath the set of Merkle Tree nodes that apply to this entry in order to generate the root hash and prove inclusion.
+	 * @param auditPath the list of Merkle Tree nodes that apply to this entry in order to generate the root hash and prove inclusion.
 	 */
 	public LogInclusionProof(int treeSize, byte[] mtlHash, int leafIdx, byte[][] auditPath) {
 		this.treeSize = treeSize;
@@ -64,6 +64,14 @@ public class LogInclusionProof {
 	 */
 	public byte[][] getAuditPath() {
 		return this.auditPath;
+	}
+
+	/**
+	 * Returns the leaf hash.
+	 * @return the leaf hash.
+	 */
+	public byte[] getLeafHash() {
+		return this.mtlHash;
 	}
 
 	/**

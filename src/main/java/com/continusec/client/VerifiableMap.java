@@ -233,10 +233,10 @@ public class VerifiableMap {
 	}
 
 	/**
-	 * VerifiedLatestMapState fetches the latest MapTreeState, verifies it is consistent with,
+	 * getVerifiedLatestMapState fetches the latest MapTreeState, verifies it is consistent with,
 	 * and newer than, any previously passed state.
 	 * @param prev previously held MapTreeState, may be null to skip consistency checks.
-	 * @return the map state for the given size
+	 * @return the latest map state (which may be the same as passed in if none newer available).
 	 * @throws ContinusecException upon error
 	 */
 	public MapTreeState getVerifiedLatestMapState(MapTreeState prev) throws ContinusecException {
@@ -250,7 +250,7 @@ public class VerifiableMap {
 	}
 
 	/**
-	 * VerifiedMapState returns a wrapper for the MapTreeHead for a given tree size, along with
+	 * getVerifiedMapState returns a wrapper for the MapTreeHead for a given tree size, along with
 	 * a LogTreeHead for the TreeHeadLog that has been verified to contain this map tree head.
 	 * The value returned by this will have been proven to be consistent with any passed prev value.
 	 * Note that the TreeHeadLogTreeHead returned may differ between calls, even for the same treeSize,
