@@ -284,6 +284,13 @@ public class AppTest {
 			throw new RuntimeException();
 		}
 
+		if (client.listLogs().size() != 24) {
+			throw new RuntimeException();
+		}
+
+		if (client.listMaps().size() != 15) {
+			throw new RuntimeException();
+		}
 	}
 
 	private static final void runCommonJsonTests(String path) throws Exception {

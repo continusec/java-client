@@ -16,12 +16,20 @@
 
 package com.continusec.client;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.io.OutputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonArray;
 
 import org.apache.commons.io.IOUtils;
 
@@ -100,6 +108,44 @@ public class ContinusecClient {
 	 */
 	public VerifiableLog getVerifiableLog(String name) {
 		return new VerifiableLog(this, "/log/" + name);
+	}
+
+	/**
+	 * Fetch the list of logs held by this account.
+	 * @return list of logs
+	 * @throws ContinusecException upon error
+	 */
+	public List<LogInfo> listLogs() throws ContinusecException {
+		ResponseData rd = this.makeRequest("GET", "/logs", null);
+		try {
+			JsonObject o = new JsonParser().parse(new String(rd.data, "UTF-8")).getAsJsonObject();
+			ArrayList<LogInfo> rv = new ArrayList<LogInfo>();
+			for (JsonElement e : o.getAsJsonArray("results")) {
+				rv.add(new LogInfo(e.getAsJsonObject().getAsJsonPrimitive("name").getAsString()));
+			}
+			return rv;
+		} catch (UnsupportedEncodingException e) {
+			throw new ContinusecException(e);
+		}
+	}
+
+	/**
+	 * Fetch the list of maps held by this account.
+	 * @return list of maps
+	 * @throws ContinusecException upon error
+	 */
+	public List<MapInfo> listMaps() throws ContinusecException {
+		ResponseData rd = this.makeRequest("GET", "/maps", null);
+		try {
+			JsonObject o = new JsonParser().parse(new String(rd.data, "UTF-8")).getAsJsonObject();
+			ArrayList<MapInfo> rv = new ArrayList<MapInfo>();
+			for (JsonElement e : o.getAsJsonArray("results")) {
+				rv.add(new MapInfo(e.getAsJsonObject().getAsJsonPrimitive("name").getAsString()));
+			}
+			return rv;
+		} catch (UnsupportedEncodingException e) {
+			throw new ContinusecException(e);
+		}
 	}
 
 	/**
