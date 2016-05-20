@@ -17,7 +17,7 @@
 package com.continusec.client;
 
 /**
- * Class to hold metdata about a map.
+ * Class to hold metadata about a map.
  */
 public class MapInfo {
 	private String name;

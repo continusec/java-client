@@ -17,7 +17,7 @@
 package com.continusec.client;
 
 /**
- * Class to hold metdata about a log.
+ * Class to hold metadata about a log.
  */
 public class LogInfo {
 	private String name;
