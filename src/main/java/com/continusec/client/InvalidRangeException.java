@@ -17,6 +17,6 @@
 package com.continusec.client;
 
 /**
- * Indicates invalid size or range in the request, e.g. tree size too large or small, or entry not found.
+ * Indicates invalid size or range in the request, e.g. tree size too large or small.
  */
 public class InvalidRangeException extends ContinusecException {}
