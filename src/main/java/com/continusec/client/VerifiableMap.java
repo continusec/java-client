@@ -119,6 +119,15 @@ public class VerifiableMap {
 		this.client.makeRequest("PUT", this.path, null);
 	}
 
+	/**
+	 * Destroy will send an API call to delete this map - this operation removes it permanently,
+	 * and renders the name unusable again within the same account, so please use with caution.
+	 * @throws ContinusecException upon error
+	 */
+	public void destroy() throws ContinusecException {
+		this.client.makeRequest("DELETE", this.path, null);
+	}
+
 	private static final byte[][] parseAuditPath(ResponseData rd) throws DecoderException {
 		byte[][]auditPath = new byte[256][];
 		// since we have no guarantees that the map is case insensitive, iterate through each header

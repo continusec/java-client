@@ -291,6 +291,22 @@ public class AppTest {
 		if (client.listMaps().size() != 15) {
 			throw new RuntimeException();
 		}
+
+		map.destroy();
+		try {
+			map.destroy();
+			throw new RuntimeException();
+		} catch (ObjectConflictException e) {
+			// good
+		}
+
+		log.destroy();
+		try {
+			log.destroy();
+			throw new RuntimeException();
+		} catch (ObjectConflictException e) {
+			// good
+		}
 	}
 
 	private static final void runCommonJsonTests(String path) throws Exception {

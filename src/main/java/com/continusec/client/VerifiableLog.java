@@ -137,6 +137,15 @@ public class VerifiableLog {
 	}
 
 	/**
+	 * Destroy will send an API call to delete this log - this operation removes it permanently,
+	 * and renders the name unusable again within the same account, so please use with caution.
+	 * @throws ContinusecException upon error
+	 */
+	public void destroy() throws ContinusecException {
+		this.client.makeRequest("DELETE", this.path, null);
+	}
+
+	/**
 	 * Send API call to add an entry to the log. Note the entry is added asynchronously, so while
 	 * the library will return as soon as the server acknowledges receipt of entry, it may not be
 	 * reflected in the tree hash (or inclusion proofs) until the server has sequenced the entry.
