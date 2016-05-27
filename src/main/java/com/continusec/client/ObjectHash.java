@@ -159,40 +159,46 @@ public class ObjectHash {
 	private static final byte[] hashDouble(double f) throws ContinusecException {
 		MessageDigest d = DigestUtils.getSha256Digest();
 		d.update((byte) 'f');
-		if (f < 0) {
-			d.update((byte) '-');
-			f = -f;
-		} else {
+		if (f == 0.0) { // special case 0
 			d.update((byte) '+');
-		}
-		int e = 0;
-		while (f > 1) {
-			f /= 2.0;
-			e++;
-		}
-		while (f < 0.5) {
-			f *= 2.0;
-			e--;
-		}
-		d.update(Integer.toString(e).getBytes());
-		d.update((byte) ':');
-		if ((f > 1) || (f <= 0.5)) {
-			throw new InvalidObjectException();
-		}
-		for (int cnt = 0; (f != 0) && (cnt < 1000); cnt++) {
-			if (f >= 1) {
-				d.update((byte) '1');
-				f -= 1.0;
+			d.update((byte) '0');
+			d.update((byte) ':');
+		} else {
+			if (f < 0) {
+				d.update((byte) '-');
+				f = -f;
 			} else {
-				d.update((byte) '0');
+				d.update((byte) '+');
 			}
-			if (f >= 1) {
+			int e = 0;
+			while (f > 1) {
+				f /= 2.0;
+				e++;
+			}
+			while (f < 0.5) {
+				f *= 2.0;
+				e--;
+			}
+			d.update(Integer.toString(e).getBytes());
+			d.update((byte) ':');
+			if ((f > 1) || (f <= 0.5)) {
 				throw new InvalidObjectException();
 			}
-			f *= 2.0;
-		}
-		if (f != 0) { // we went too long
-			throw new InvalidObjectException();
+			for (int cnt = 0; (f != 0) && (cnt < 1000); cnt++) {
+				if (f >= 1) {
+					d.update((byte) '1');
+					f -= 1.0;
+				} else {
+					d.update((byte) '0');
+				}
+				if (f >= 1) {
+					throw new InvalidObjectException();
+				}
+				f *= 2.0;
+			}
+			if (f != 0) { // we went too long
+				throw new InvalidObjectException();
+			}
 		}
 		return d.digest();
 	}
