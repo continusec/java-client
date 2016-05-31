@@ -1,6 +1,6 @@
 # java-client
 
-Java Client Library for Continusec Verifiable Data Structures API.
+Open-source (Apache 2 License) Java Client Library for Continusec Verifiable Data Structures API.
 
 To get started, get a copy of this repo:
 
