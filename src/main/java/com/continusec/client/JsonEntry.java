@@ -67,10 +67,14 @@ public class JsonEntry implements VerifiableEntry, UploadableEntry {
 	 */
 	public byte[] getLeafHash() throws ContinusecException {
 		if (this.lh == null) {
-			try {
-				this.lh = Util.leafMerkleTreeHash(ObjectHash.objectHashWithStdRedaction(new JsonParser().parse(new String(this.rawData, "UTF8"))));
-			} catch (UnsupportedEncodingException e) {
-				throw new InvalidObjectException(e);
+			if (this.rawData.length == 0) {
+				this.lh = Util.leafMerkleTreeHash(this.rawData);
+			} else {
+				try {
+					this.lh = Util.leafMerkleTreeHash(ObjectHash.objectHashWithStdRedaction(new JsonParser().parse(new String(this.rawData, "UTF8"))));
+				} catch (UnsupportedEncodingException e) {
+					throw new InvalidObjectException(e);
+				}
 			}
 		}
 		return this.lh;

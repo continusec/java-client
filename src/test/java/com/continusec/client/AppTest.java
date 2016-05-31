@@ -130,7 +130,6 @@ public class AppTest {
 			throw new RuntimeException();
 		}
 
-
 		final int[] count = new int[1];
 
 		count[0] = 0;
@@ -307,6 +306,21 @@ public class AppTest {
 		} catch (ObjectConflictException e) {
 			// good
 		}
+
+		client = new ContinusecClient("7981306761429961588", "c9fc80d4e19ddbf01a4e6b5277a29e1bffa88fe047af9d0b9b36de536f85c2c6", "http://localhost:8080");
+		map = client.getVerifiableMap("mapjson");
+		MapTreeState m3 = map.getVerifiedLatestMapState(null);
+		map.getVerifiedValue("stdjson".getBytes(), m3, JsonEntryFactory.getInstance());
+		map.getVerifiedValue("redjson".getBytes(), m3, RedactedJsonEntryFactory.getInstance());
+		map.getVerifiedValue("xstdjson".getBytes(), m3, JsonEntryFactory.getInstance());
+		map.getVerifiedValue("xredjson".getBytes(), m3, RedactedJsonEntryFactory.getInstance());
+		client = new ContinusecClient("7981306761429961588", "redacted", "http://localhost:8080");
+		map = client.getVerifiableMap("mapjson");
+		m3 = map.getVerifiedLatestMapState(null);
+		map.getVerifiedValue("stdjson".getBytes(), m3, JsonEntryFactory.getInstance());
+		map.getVerifiedValue("redjson".getBytes(), m3, RedactedJsonEntryFactory.getInstance());
+		map.getVerifiedValue("xstdjson".getBytes(), m3, JsonEntryFactory.getInstance());
+		map.getVerifiedValue("xredjson".getBytes(), m3, RedactedJsonEntryFactory.getInstance());
 	}
 
 	private static final void runCommonJsonTests(String path) throws Exception {
