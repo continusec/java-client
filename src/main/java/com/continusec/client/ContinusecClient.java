@@ -116,7 +116,7 @@ public class ContinusecClient {
 	 * @throws ContinusecException upon error
 	 */
 	public List<LogInfo> listLogs() throws ContinusecException {
-		ResponseData rd = this.makeRequest("GET", "/logs", null);
+		ResponseData rd = this.makeRequest("GET", "/logs", null, null);
 		try {
 			JsonObject o = new JsonParser().parse(new String(rd.data, "UTF-8")).getAsJsonObject();
 			ArrayList<LogInfo> rv = new ArrayList<LogInfo>();
@@ -135,7 +135,7 @@ public class ContinusecClient {
 	 * @throws ContinusecException upon error
 	 */
 	public List<MapInfo> listMaps() throws ContinusecException {
-		ResponseData rd = this.makeRequest("GET", "/maps", null);
+		ResponseData rd = this.makeRequest("GET", "/maps", null, null);
 		try {
 			JsonObject o = new JsonParser().parse(new String(rd.data, "UTF-8")).getAsJsonObject();
 			ArrayList<MapInfo> rv = new ArrayList<MapInfo>();
@@ -153,10 +153,11 @@ public class ContinusecClient {
 	 * @param method the HTTP method to use.
 	 * @param path the path underneath this account to use.
 	 * @param data for PUT and POST methods, the data (if any to) to send in body.
+	 * @param extraHeaders additional headers to include in the request
 	 * @return the body and headers.
 	 * @throws ContinusecException for any network errors, or non 200 responses.
 	 */
-	protected ResponseData makeRequest(String method, String path, byte[] data) throws ContinusecException {
+	protected ResponseData makeRequest(String method, String path, byte[] data, String[][] extraHeaders) throws ContinusecException {
 		try {
 			URL url = new URL(this.baseURL + "/v1/account/" + this.account + path);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -164,6 +165,11 @@ public class ContinusecClient {
 			conn.setRequestMethod(method);
 			if (this.apiKey != null) {
 				conn.setRequestProperty("Authorization", "Key " + this.apiKey);
+			}
+			if (extraHeaders != null) {
+				for (int i = 0; i < extraHeaders.length; i++) {
+					conn.setRequestProperty(extraHeaders[i][0], extraHeaders[i][1]);
+				}
 			}
 			if (method.equals("POST") || method.equals("PUT")) {
 				conn.setDoOutput(true);

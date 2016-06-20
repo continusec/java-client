@@ -116,7 +116,7 @@ public class VerifiableMap {
 	 * @throws ContinusecException upon error
 	 */
 	public void create() throws ContinusecException {
-		this.client.makeRequest("PUT", this.path, null);
+		this.client.makeRequest("PUT", this.path, null, null);
 	}
 
 	/**
@@ -125,7 +125,7 @@ public class VerifiableMap {
 	 * @throws ContinusecException upon error
 	 */
 	public void destroy() throws ContinusecException {
-		this.client.makeRequest("DELETE", this.path, null);
+		this.client.makeRequest("DELETE", this.path, null, null);
 	}
 
 	private static final byte[][] parseAuditPath(ResponseData rd) throws DecoderException {
@@ -181,7 +181,7 @@ public class VerifiableMap {
 	 */
 	public MapGetEntryResponse get(byte[] key, int treeSize, VerifiableEntryFactory f) throws ContinusecException {
 		try {
-			ResponseData rd = this.client.makeRequest("GET", this.path + "/tree/" + treeSize + "/key/h/" + Hex.encodeHexString(key) + f.getFormat(), null);
+			ResponseData rd = this.client.makeRequest("GET", this.path + "/tree/" + treeSize + "/key/h/" + Hex.encodeHexString(key) + f.getFormat(), null, null);
 			return new MapGetEntryResponse(key, f.createFromBytes(rd.data), parseAuditPath(rd), parseVerifiedTreeSize(rd));
 		} catch (DecoderException e) {
 			throw new InternalErrorException();
@@ -198,7 +198,26 @@ public class VerifiableMap {
 	 */
 	public AddEntryResponse set(byte[] key, UploadableEntry e) throws ContinusecException {
 		try {
-			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("PUT", this.path + "/key/h/" + Hex.encodeHexString(key) + e.getFormat(), e.getDataForUpload()).data, "UTF-8")).getAsJsonObject();
+			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("PUT", this.path + "/key/h/" + Hex.encodeHexString(key) + e.getFormat(), e.getDataForUpload(), null).data, "UTF-8")).getAsJsonObject();
+			return new AddEntryResponse(Base64.decodeBase64(j.get("leaf_hash").getAsString()));
+		} catch (UnsupportedEncodingException e1) {
+			throw new ContinusecException(e1);
+		}
+	}
+
+	/**
+	 * Set the value for a given key in the map, conditional on the previous leaf hash value.
+	 * Calling this has the effect of adding a mutation to the
+	 * mutation log for the map, which then reflects in the root hash for the map. This occurs asynchronously.
+	 * @param key the key to set.
+	 * @param e the entry to set to key to. Typically one of {@link RawDataEntry}, {@link JsonEntry} or {@link RedactableJsonEntry}.
+	 * @return add entry response, which includes the Merkle Tree Leaf hash of the mutation log entry added.
+	 * @throws ContinusecException upon error
+	 */
+	public AddEntryResponse update(byte[] key, UploadableEntry e, MerkleTreeLeaf previousLeafHash) throws ContinusecException {
+		try {
+			String[][] headers = {{"X-Previous-LeafHash", Hex.encodeHexString(previousLeafHash.getLeafHash())}};
+			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("PUT", this.path + "/key/h/" + Hex.encodeHexString(key) + e.getFormat(), e.getDataForUpload(), headers).data, "UTF-8")).getAsJsonObject();
 			return new AddEntryResponse(Base64.decodeBase64(j.get("leaf_hash").getAsString()));
 		} catch (UnsupportedEncodingException e1) {
 			throw new ContinusecException(e1);
@@ -214,7 +233,7 @@ public class VerifiableMap {
 	 */
 	public AddEntryResponse delete(byte[] key) throws ContinusecException {
 		try {
-			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("DELETE", this.path + "/key/h/" + Hex.encodeHexString(key), null).data, "UTF-8")).getAsJsonObject();
+			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("DELETE", this.path + "/key/h/" + Hex.encodeHexString(key), null, null).data, "UTF-8")).getAsJsonObject();
 			return new AddEntryResponse(Base64.decodeBase64(j.get("leaf_hash").getAsString()));
 		} catch (UnsupportedEncodingException e1) {
 			throw new ContinusecException(e1);
@@ -231,7 +250,7 @@ public class VerifiableMap {
 	 */
 	public MapTreeHead getTreeHead(int treeSize) throws ContinusecException {
 		try {
-			JsonObject e = new JsonParser().parse(new String(this.client.makeRequest("GET", this.path + "/tree/" + treeSize, null).data, "UTF-8")).getAsJsonObject();
+			JsonObject e = new JsonParser().parse(new String(this.client.makeRequest("GET", this.path + "/tree/" + treeSize, null, null).data, "UTF-8")).getAsJsonObject();
 			return new MapTreeHead(
 				Base64.decodeBase64(e.get("map_hash").getAsString()),
 				LogTreeHead.fromJsonObject(e.getAsJsonObject("mutation_log"))

@@ -81,7 +81,7 @@ public class LogEntryIterator implements Iterator<VerifiableEntry> {
 					tentLast = this.endIdx;
 				}
 				String url = this.path + "/entries/" + this.cursor + "-" + tentLast + factory.getFormat();
-				String s = new String(this.client.makeRequest("GET", url, null).data, "UTF-8");
+				String s = new String(this.client.makeRequest("GET", url, null, null).data, "UTF-8");
 				this.curArray =  new JsonParser().parse(s).getAsJsonObject().getAsJsonArray("entries");
 				this.idxInArray = 0;
 			}

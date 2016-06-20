@@ -133,7 +133,7 @@ public class VerifiableLog {
 	 * @throws ContinusecException upon error
 	 */
 	public void create() throws ContinusecException {
-		this.client.makeRequest("PUT", this.path, null);
+		this.client.makeRequest("PUT", this.path, null, null);
 	}
 
 	/**
@@ -142,7 +142,7 @@ public class VerifiableLog {
 	 * @throws ContinusecException upon error
 	 */
 	public void destroy() throws ContinusecException {
-		this.client.makeRequest("DELETE", this.path, null);
+		this.client.makeRequest("DELETE", this.path, null, null);
 	}
 
 	/**
@@ -156,7 +156,7 @@ public class VerifiableLog {
 	 */
 	public AddEntryResponse add(UploadableEntry e) throws ContinusecException {
 		try {
-			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("POST", this.path + "/entry" + e.getFormat(), e.getDataForUpload()).data, "UTF-8")).getAsJsonObject();
+			JsonObject j = new JsonParser().parse(new String(this.client.makeRequest("POST", this.path + "/entry" + e.getFormat(), e.getDataForUpload(), null).data, "UTF-8")).getAsJsonObject();
 			return new AddEntryResponse(Base64.decodeBase64(j.get("leaf_hash").getAsString()));
 		} catch (UnsupportedEncodingException e1) {
 			throw new ContinusecException(e1);
@@ -173,7 +173,7 @@ public class VerifiableLog {
 	 */
 	public LogTreeHead getTreeHead(int treeSize) throws ContinusecException {
 		try {
-			JsonObject e = new JsonParser().parse(new String(this.client.makeRequest("GET", this.path + "/tree/" + treeSize, null).data, "UTF-8")).getAsJsonObject();
+			JsonObject e = new JsonParser().parse(new String(this.client.makeRequest("GET", this.path + "/tree/" + treeSize, null, null).data, "UTF-8")).getAsJsonObject();
 			return LogTreeHead.fromJsonObject(e);
 		} catch (UnsupportedEncodingException e) {
 			throw new ContinusecException(e);
@@ -189,7 +189,7 @@ public class VerifiableLog {
 	 * @throws ContinusecException upon error
 	 */
 	public VerifiableEntry get(int idx, VerifiableEntryFactory f) throws ContinusecException {
-		return f.createFromBytes(this.client.makeRequest("GET", this.path + "/entry/" + idx + f.getFormat(), null).data);
+		return f.createFromBytes(this.client.makeRequest("GET", this.path + "/entry/" + idx + f.getFormat(), null, null).data);
 	}
 
 	/**
@@ -216,7 +216,7 @@ public class VerifiableLog {
 	public LogInclusionProof getInclusionProof(int treeSize, MerkleTreeLeaf leaf) throws ContinusecException {
 		try {
 			byte[] mtlHash = leaf.getLeafHash();
-			JsonObject e = new JsonParser().parse(new String(this.client.makeRequest("GET", this.path + "/tree/" + treeSize + "/inclusion/h/" + Hex.encodeHexString(mtlHash), null).data, "UTF-8")).getAsJsonObject();
+			JsonObject e = new JsonParser().parse(new String(this.client.makeRequest("GET", this.path + "/tree/" + treeSize + "/inclusion/h/" + Hex.encodeHexString(mtlHash), null, null).data, "UTF-8")).getAsJsonObject();
 			return new LogInclusionProof(e.getAsJsonPrimitive("tree_size").getAsInt(), mtlHash, e.get("leaf_index").getAsInt(), jsonArrayToAuditProof(e.getAsJsonArray("proof")));
 		} catch (UnsupportedEncodingException e) {
 			throw new ContinusecException(e);
@@ -244,7 +244,7 @@ public class VerifiableLog {
 	 */
 	public LogInclusionProof getInclusionProofByIndex(int treeSize, int leafIndex) throws ContinusecException {
 		try {
-			JsonObject e = new JsonParser().parse(new String(this.client.makeRequest("GET", this.path + "/tree/" + treeSize + "/inclusion/" + leafIndex, null).data, "UTF-8")).getAsJsonObject();
+			JsonObject e = new JsonParser().parse(new String(this.client.makeRequest("GET", this.path + "/tree/" + treeSize + "/inclusion/" + leafIndex, null, null).data, "UTF-8")).getAsJsonObject();
 			return new LogInclusionProof(e.getAsJsonPrimitive("tree_size").getAsInt(), null, e.get("leaf_index").getAsInt(), jsonArrayToAuditProof(e.getAsJsonArray("proof")));
 		} catch (UnsupportedEncodingException e) {
 			throw new ContinusecException(e);
@@ -303,7 +303,7 @@ public class VerifiableLog {
 	 */
 	public LogConsistencyProof getConsistencyProof(int firstSize, int secondSize) throws ContinusecException {
 		try {
-			JsonObject e = new JsonParser().parse(new String(this.client.makeRequest("GET", this.path + "/tree/" + secondSize + "/consistency/" + firstSize, null).data, "UTF-8")).getAsJsonObject();
+			JsonObject e = new JsonParser().parse(new String(this.client.makeRequest("GET", this.path + "/tree/" + secondSize + "/consistency/" + firstSize, null, null).data, "UTF-8")).getAsJsonObject();
 			return new LogConsistencyProof(e.getAsJsonPrimitive("first_tree_size").getAsInt(), e.getAsJsonPrimitive("second_tree_size").getAsInt(), jsonArrayToAuditProof(e.getAsJsonArray("proof")));
 		} catch (UnsupportedEncodingException e) {
 			throw new ContinusecException(e);

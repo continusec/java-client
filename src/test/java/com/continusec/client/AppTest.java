@@ -321,6 +321,10 @@ public class AppTest {
 		map.getVerifiedValue("redjson".getBytes(), m3, RedactedJsonEntryFactory.getInstance());
 		map.getVerifiedValue("xstdjson".getBytes(), m3, JsonEntryFactory.getInstance());
 		map.getVerifiedValue("xredjson".getBytes(), m3, RedactedJsonEntryFactory.getInstance());
+
+		client = new ContinusecClient("7981306761429961588", "testupdate", "http://localhost:8080");
+		map = client.getVerifiableMap("loadtestmap2");
+		map.update("fooyo".getBytes(), new RawDataEntry("bar".getBytes()), new RawDataEntry(new byte[0]));
 	}
 
 	private static final void runCommonJsonTests(String path) throws Exception {
