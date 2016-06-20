@@ -211,6 +211,7 @@ public class VerifiableMap {
 	 * mutation log for the map, which then reflects in the root hash for the map. This occurs asynchronously.
 	 * @param key the key to set.
 	 * @param e the entry to set to key to. Typically one of {@link RawDataEntry}, {@link JsonEntry} or {@link RedactableJsonEntry}.
+	 * @param previousLeafHash the previous leaf hash. Typically one of {@link RawDataEntry} or {@link JsonEntry}.
 	 * @return add entry response, which includes the Merkle Tree Leaf hash of the mutation log entry added.
 	 * @throws ContinusecException upon error
 	 */
